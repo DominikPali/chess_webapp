@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% set title = "Play" %}
+{% block content %}
+<section class="page-head">
+  <div>
+    <span class="eyebrow">Game room</span>
+    <h1>Play against the bot</h1>
+    <p class="lead">Type moves like <strong>e4</strong>, <strong>Nf3</strong> or <strong>O-O</strong>.</p>
+  </div>
+</section>
+
+<div id="game-page">
+  <section id="setup-panel" class="card setup-card">
+    <h2>Start a new game</h2>
+    <p class="muted-text">Choose your colour and begin.</p>
+    <div class="choice-group">
+      <label class="choice-pill">
+        <input type="radio" name="player-color" value="white" checked>
+        <span>Play as White</span>
+      </label>
+      <label class="choice-pill">
+        <input type="radio" name="player-color" value="black">
+        <span>Play as Black</span>
+      </label>
+    </div>
+    <button id="start-game" class="primary-btn">Start Game</button>
+  </section>
+
+  <section id="board-panel" class="game-grid" hidden>
+    <div class="card board-card">
+      <div class="status-row">
+        <div>
+          <h2 id="status-text">White to move</h2>
+          <p id="message-text" class="muted-text"></p>
+        </div>
+        <span id="move-count" class="status-pill">Move 1</span>
+      </div>
+      <div id="board-box" class="board-box"></div>
+      <form id="move-form" class="move-form" autocomplete="off">
+        <input id="move-input" type="text" placeholder="Enter your move">
+        <button type="submit" class="primary-btn">Play Move</button>
+      </form>
+      <p id="form-error" class="error-text" hidden></p>
+      <div class="action-row">
+        <button id="resign-game" type="button" class="ghost-btn">Resign</button>
+        <button id="new-game" type="button" class="ghost-btn">New Game</button>
+        <button id="save-game" type="button" class="primary-btn" hidden>Save Game</button>
+      </div>
+    </div>
+
+    <div class="card side-card">
+      <h3>Move list</h3>
+      <div id="history-box" class="history-box">
+        <p class="muted-text">No moves yet.</p>
+      </div>
+      <div class="helper-box">
+        <h3>Examples</h3>
+        <ul>
+          <li><strong>e4</strong> pawn to e4</li>
+          <li><strong>Nf3</strong> knight to f3</li>
+          <li><strong>Bxe5</strong> bishop captures on e5</li>
+          <li><strong>O-O</strong> castle kingside</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+</div>
+{% endblock %}

@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% set title = "Account" %}
+{% block content %}
+<section class="auth-wrap">
+  <div class="card auth-card">
+    <h1>{% if mode == "register" %}Create an account{% else %}Welcome back{% endif %}</h1>
+    <p class="lead">{% if mode == "register" %}Register to save your games and come back later.{% else %}Log in to continue playing.{% endif %}</p>
+    <form method="post" class="stack-form">
+      <label>
+        <span>Username</span>
+        <input type="text" name="username" required autocomplete="username">
+      </label>
+      {% if mode == "register" %}
+      <label>
+        <span>Email</span>
+        <input type="email" name="email" required autocomplete="email">
+      </label>
+      {% endif %}
+      <label>
+        <span>Password</span>
+        <input type="password" name="password" required autocomplete="{% if mode == 'register' %}new-password{% else %}current-password{% endif %}">
+      </label>
+      <button type="submit" class="primary-btn full-width">{% if mode == "register" %}Register{% else %}Log In{% endif %}</button>
+    </form>
+    <p class="switch-link">
+      {% if mode == "register" %}
+      Already have an account? <a href="{{ url_for('login') }}">Log in here</a>
+      {% else %}
+      Need an account? <a href="{{ url_for('register') }}">Register here</a>
+      {% endif %}
+    </p>
+  </div>
+</section>
+{% endblock %}

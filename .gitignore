@@ -1,0 +1,15 @@
+.DS_Store
+.env
+.venv/
+venv/
+bin/
+include/
+lib/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+instance/*.db
+instance/*.sqlite
+instance/*.sqlite3

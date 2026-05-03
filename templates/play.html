@@ -1,0 +1,219 @@
+{% extends "base.html" %}
+{% set active_page = "play" %}
+
+{% block title %}Play – NotationLearner{% endblock %}
+
+{% block content %}
+  <main class="nl-page-content">
+    <div class="container" style="max-width: 1100px;">
+
+      <!-- ── Game setup (shown before game starts) ── -->
+      <div id="game-setup" class="nl-game-setup">
+        <div class="nl-setup-card">
+          <h2 class="nl-setup-title">Start a New Game</h2>
+          <p class="nl-setup-subtitle">Choose your opponent and color to begin.</p>
+
+          <div class="mb-3">
+            <label class="nl-form-label">Opponent</label>
+            <div class="d-flex gap-2">
+              <button class="btn nl-btn-secondary nl-setup-opt active" data-opponent="Stockfish">
+                <i class="bi bi-robot me-1"></i> Bot (Stockfish)
+              </button>
+              <button class="btn nl-btn-secondary nl-setup-opt" data-opponent="Friend">
+                <i class="bi bi-people me-1"></i> Friend (online)
+              </button>
+            </div>
+          </div>
+
+          <div class="mb-4">
+            <label class="nl-form-label">Play as</label>
+            <div class="d-flex gap-2">
+              <button class="btn nl-btn-secondary nl-color-opt active" data-color="white">
+                <span class="nl-color-square nl-color-square--white"></span> White
+              </button>
+              <button class="btn nl-btn-secondary nl-color-opt" data-color="black">
+                <span class="nl-color-square nl-color-square--black"></span> Black
+              </button>
+            </div>
+          </div>
+
+          <button id="btn-start-game" class="btn nl-btn-primary w-100">
+            Start Game
+          </button>
+
+          <!-- Join by code -->
+          <div class="nl-join-divider">
+            <span>or</span>
+          </div>
+          <div class="nl-join-section">
+            <label class="nl-form-label">Join a Friend's Game</label>
+            <div class="d-flex gap-2">
+              <input type="text" id="join-code-input" class="form-control nl-form-control"
+                     placeholder="Enter game code" maxlength="6"
+                     style="text-transform: uppercase; letter-spacing: 0.15em; font-weight: 600;" />
+              <button id="btn-join-game" class="btn nl-btn-primary" style="min-width: 100px;">
+                Join
+              </button>
+            </div>
+            <div id="join-error" class="nl-move-error mt-2" style="display: none;"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Waiting for opponent (shown after creating a friend game) ── -->
+      <div id="room-waiting" class="nl-game-setup" style="display: none;">
+        <div class="nl-setup-card text-center">
+          <h2 class="nl-setup-title">Waiting for Opponent</h2>
+          <p class="nl-setup-subtitle">Share this code with your friend:</p>
+          <div class="nl-game-code" id="room-code-display"></div>
+          <p class="nl-setup-subtitle mt-2" style="font-size: 0.85rem; color: var(--nl-mid-light);">
+            Your friend should go to <strong>Play</strong> and enter this code to join.
+          </p>
+          <div class="nl-waiting-spinner">
+            <div class="spinner-border text-secondary" role="status"></div>
+            <span class="ms-2">Waiting for opponent to join...</span>
+          </div>
+          <button id="btn-cancel-room" class="btn nl-btn-secondary mt-3">Cancel</button>
+        </div>
+      </div>
+
+      <!-- ── Active game area (hidden until game starts) ── -->
+      <div id="game-area" class="nl-game-area" style="display: none;">
+        <div class="row g-4">
+
+          <!-- Left column: Board -->
+          <div class="col-lg-7">
+            <div class="nl-board-card">
+              <!-- Status bar -->
+              <div class="nl-status-bar">
+                <span id="game-status" class="nl-status-text">White to move</span>
+                <span id="game-move-count" class="nl-move-counter">Move 1</span>
+              </div>
+              <!-- SVG Board -->
+              <div id="board-container" class="nl-board-container">
+                <!-- SVG injected here -->
+              </div>
+              <!-- Move input -->
+              <div class="nl-input-area">
+                <form id="move-form" class="d-flex gap-2" autocomplete="off">
+                  <input type="text" id="move-input" class="form-control nl-form-control nl-move-input"
+                         placeholder="Enter move (e.g. e4, Nf3, O-O)" autofocus />
+                  <button type="submit" class="btn nl-btn-primary" style="min-width: 100px;">
+                    Move
+                  </button>
+                </form>
+                <div id="move-error" class="nl-move-error" style="display: none;"></div>
+                <div id="move-message" class="nl-move-message" style="display: none;"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right column: Panels -->
+          <div class="col-lg-5">
+
+            <!-- Move history -->
+            <div class="nl-panel">
+              <h3 class="nl-panel-title">
+                <i class="bi bi-clock-history me-2"></i>Move History
+              </h3>
+              <div id="move-history" class="nl-move-history">
+                <p class="nl-empty-state">No moves yet.</p>
+              </div>
+            </div>
+
+            <!-- Hint panel -->
+            <div class="nl-panel">
+              <h3 class="nl-panel-title">
+                <i class="bi bi-lightbulb me-2"></i>Hints
+              </h3>
+              <div class="d-flex align-items-center gap-3 mb-2">
+                <label class="nl-toggle-label">
+                  <input type="checkbox" id="hint-toggle" class="nl-toggle-checkbox" />
+                  <span class="nl-toggle-switch"></span>
+                  <span class="nl-toggle-text">Enable hints</span>
+                </label>
+              </div>
+              <div id="hint-display" class="nl-hint-display" style="display: none;">
+                <button id="btn-get-hint" class="btn nl-btn-secondary nl-btn-sm mb-2">
+                  <i class="bi bi-magic me-1"></i> Get Hint
+                </button>
+                <div id="hint-result" class="nl-hint-result"></div>
+              </div>
+            </div>
+
+            <!-- Help box -->
+            <div class="nl-panel">
+              <h3 class="nl-panel-title nl-help-toggle" id="help-toggle">
+                <i class="bi bi-question-circle me-2"></i>Notation Help
+                <i class="bi bi-chevron-down nl-chevron"></i>
+              </h3>
+              <div id="help-content" class="nl-help-content" style="display: none;">
+                <table class="nl-help-table">
+                  <tr><td class="nl-help-symbol">K</td><td>King</td></tr>
+                  <tr><td class="nl-help-symbol">Q</td><td>Queen</td></tr>
+                  <tr><td class="nl-help-symbol">R</td><td>Rook</td></tr>
+                  <tr><td class="nl-help-symbol">B</td><td>Bishop</td></tr>
+                  <tr><td class="nl-help-symbol">N</td><td>Knight</td></tr>
+                  <tr><td colspan="2" class="nl-help-divider"></td></tr>
+                  <tr><td class="nl-help-symbol">e4</td><td>Pawn to e4</td></tr>
+                  <tr><td class="nl-help-symbol">Nf3</td><td>Knight to f3</td></tr>
+                  <tr><td class="nl-help-symbol">Bxe5</td><td>Bishop captures on e5</td></tr>
+                  <tr><td class="nl-help-symbol">exd5</td><td>Pawn on e-file captures on d5</td></tr>
+                  <tr><td colspan="2" class="nl-help-divider"></td></tr>
+                  <tr><td class="nl-help-symbol">O-O</td><td>Kingside castling</td></tr>
+                  <tr><td class="nl-help-symbol">O-O-O</td><td>Queenside castling</td></tr>
+                  <tr><td class="nl-help-symbol">e8=Q</td><td>Pawn promotes to Queen</td></tr>
+                  <tr><td class="nl-help-symbol">+</td><td>Check</td></tr>
+                  <tr><td class="nl-help-symbol">#</td><td>Checkmate</td></tr>
+                </table>
+              </div>
+            </div>
+
+            <!-- Game controls -->
+            <div class="nl-panel">
+              <div class="d-flex gap-2">
+                <button id="btn-resign" class="btn nl-btn-danger nl-btn-sm" style="flex:1;">
+                  <i class="bi bi-flag me-1"></i> Resign
+                </button>
+                <button id="btn-new-game" class="btn nl-btn-secondary nl-btn-sm" style="flex:1;">
+                  <i class="bi bi-plus-circle me-1"></i> New Game
+                </button>
+              </div>
+            </div>
+
+          </div><!-- /col -->
+        </div><!-- /row -->
+
+        <!-- Game over overlay -->
+        <div id="game-over-overlay" class="nl-game-over-overlay" style="display: none;">
+          <div class="nl-game-over-card">
+            <h2 id="game-over-title" class="nl-game-over-title">Game Over</h2>
+            <p id="game-over-message" class="nl-game-over-message"></p>
+            <div class="d-flex gap-2 justify-content-center">
+              <button id="btn-save-game" class="btn nl-btn-primary" style="min-width: 140px;">
+                <i class="bi bi-save me-1"></i> Save Game
+              </button>
+              <button id="btn-play-again" class="btn nl-btn-secondary" style="min-width: 140px;">
+                <i class="bi bi-arrow-repeat me-1"></i> Play Again
+              </button>
+            </div>
+          </div>
+        </div>
+
+      </div><!-- /game-area -->
+
+    </div>
+  </main>
+{% endblock %}
+
+{% block page_data_script %}
+  <script>
+    {% if room_code is defined and room_code %}
+      window.ROOM_CODE = "{{ room_code }}";
+    {% endif %}
+  </script>
+{% endblock %}
+
+{% block extra_scripts %}
+  <script src="{{ url_for('static', filename='main.js') }}"></script>
+{% endblock %}

@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+{% set active_page = "about" %}
+
+{% block title %}About – NotationLearner{% endblock %}
+
+{% block extra_head %}
+  <style>
+    .nl-about-card {
+      background: var(--nl-white);
+      border: 1.5px solid var(--nl-border);
+      border-radius: var(--nl-radius);
+      box-shadow: var(--nl-shadow);
+      padding: 2.75rem 2.5rem;
+      width: 100%;
+      max-width: 720px;
+    }
+
+    .nl-about-title {
+      font-family: var(--font-display);
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--nl-darkest);
+      margin-bottom: 0.3rem;
+    }
+
+    .nl-about-divider {
+      border: none;
+      border-top: 1.5px solid var(--nl-border);
+      margin: 1.5rem 0;
+    }
+
+    .nl-about-body {
+      font-size: 1rem;
+      color: var(--nl-text);
+      line-height: 1.75;
+    }
+
+    .nl-about-body p {
+      margin-bottom: 1.1rem;
+    }
+
+    .nl-about-body p:last-child {
+      margin-bottom: 0;
+    }
+
+    .nl-about-label {
+      font-size: 0.78rem;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--nl-mid-light);
+      margin-bottom: 0.5rem;
+    }
+  </style>
+{% endblock %}
+
+{% block content %}
+  <main class="nl-hero d-flex align-items-center justify-content-center">
+    <div class="nl-about-card">
+      <p class="nl-about-label">About this project</p>
+      <h1 class="nl-about-title">NotationLearner</h1>
+
+      <hr class="nl-about-divider" />
+
+      <div class="nl-about-body">
+        <p>
+          Chess is widely considered one of the most challenging strategic games in human history.
+          While the rules are easy to learn, many players struggle to advance because of the game's
+          depth and complexity. A key concept that separates casual players from serious ones is
+          <strong>algebraic notation</strong> — the standardised system used to record and
+          communicate moves using coordinates and symbols.
+        </p>
+        <p>
+          The idea behind this project came from a personal experience: a friend who could play
+          an entire game without ever glancing at the board. Attempting to learn algebraic notation
+          independently, I quickly realised there were no widely available tools designed specifically
+          for practising it in the context of a real game. NotationLearner was built to fill that gap.
+        </p>
+        <p>
+          The application lets players compete in full chess games where every move is entered
+          exclusively through algebraic notation — no clicking pieces on a board. A visual
+          board is available as a teaching aid, and a built-in reference guide keeps the notation
+          rules within reach at all times. For those who want deeper guidance, an optional hint
+          system powered by the Stockfish chess engine suggests the best available moves.
+          Completed games are saved to each user's account and can be replayed move-by-move
+          through the integrated analysis interface.
+        </p>
+        <p>
+          The backend is built with Python and Flask, chess logic is handled by the
+          python-chess library, and all user data and game history are stored in a MySQL
+          relational database.
+        </p>
+      </div>
+    </div>
+  </main>
+{% endblock %}
+
+{% block extra_scripts %}
+  <script src="{{ url_for('static', filename='main.js') }}"></script>
+{% endblock %}

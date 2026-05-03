@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% set active_page = "profile" %}
+
+{% block title %}Edit Profile – NotationLearner{% endblock %}
+
+{% block content %}
+  <main class="nl-hero d-flex align-items-center justify-content-center">
+    <div class="nl-auth-card">
+      <h1 class="nl-auth-title mb-1">Edit Profile</h1>
+      <p class="nl-auth-subtitle">Update your username or email address.</p>
+
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          {% for category, message in messages %}
+            <div class="nl-flash nl-flash--{{ category }} mb-3">{{ message }}</div>
+          {% endfor %}
+        {% endif %}
+      {% endwith %}
+
+      <form method="POST" action="{{ url_for('edit_profile') }}">
+        <div class="mb-3">
+          <label class="nl-form-label" for="username">Username</label>
+          <input type="text" id="username" name="username"
+                 class="form-control nl-form-control"
+                 value="{{ current_user.username }}"
+                 required autocomplete="username" />
+        </div>
+        <div class="mb-4">
+          <label class="nl-form-label" for="email">Email</label>
+          <input type="email" id="email" name="email"
+                 class="form-control nl-form-control"
+                 value="{{ current_user.email }}"
+                 required autocomplete="email" />
+        </div>
+        <div class="d-flex gap-2">
+          <button type="submit" class="btn nl-btn-primary" style="min-width: unset; flex: 1;">
+            Save Changes
+          </button>
+          <a href="{{ url_for('profile') }}" class="btn nl-btn-secondary" style="min-width: unset; flex: 1;">
+            Cancel
+          </a>
+        </div>
+      </form>
+    </div>
+  </main>
+{% endblock %}

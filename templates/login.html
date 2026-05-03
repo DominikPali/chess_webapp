@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+
+{% block title %}{% if mode == 'register' %}Register{% else %}Log In{% endif %} – NotationLearner{% endblock %}
+
+{% block content %}
+  <main class="nl-hero d-flex align-items-center justify-content-center">
+    <div class="nl-auth-card">
+      <h1 class="nl-auth-title mb-1">{% if mode == 'register' %}Register{% else %}Log In{% endif %}</h1>
+      <p class="nl-auth-subtitle">
+        {% if mode == 'register' %}Create your NotationLearner account.{% else %}Welcome back!{% endif %}
+      </p>
+
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          {% for category, message in messages %}
+            <div class="nl-flash nl-flash--{{ category }} mb-3">{{ message }}</div>
+          {% endfor %}
+        {% endif %}
+      {% endwith %}
+
+      <form method="POST">
+        <div class="mb-3">
+          <label class="nl-form-label" for="username">Username</label>
+          <input type="text" id="username" name="username"
+                 class="form-control nl-form-control"
+                 placeholder="Enter your username"
+                 required autocomplete="username" />
+        </div>
+
+        {% if mode == 'register' %}
+        <div class="mb-3">
+          <label class="nl-form-label" for="email">Email</label>
+          <input type="email" id="email" name="email"
+                 class="form-control nl-form-control"
+                 placeholder="Enter your email"
+                 required autocomplete="email" />
+        </div>
+        {% endif %}
+
+        <div class="mb-4">
+          <label class="nl-form-label" for="password">Password</label>
+          <input type="password" id="password" name="password"
+                 class="form-control nl-form-control"
+                 placeholder="{% if mode == 'register' %}At least 6 characters{% else %}Enter your password{% endif %}"
+                 required autocomplete="{% if mode == 'register' %}new-password{% else %}current-password{% endif %}" />
+        </div>
+
+        <button type="submit" class="btn nl-btn-primary w-100" style="font-size:1.1rem; min-width:unset;">
+          {% if mode == 'register' %}Create Account{% else %}Log In{% endif %}
+        </button>
+      </form>
+
+      <p class="nl-auth-footer-text">
+        {% if mode == 'register' %}
+          Already have an account? <a href="{{ url_for('login') }}">Log in here</a>
+        {% else %}
+          Don't have an account? <a href="{{ url_for('register') }}">Register here</a>
+        {% endif %}
+      </p>
+    </div>
+  </main>
+{% endblock %}

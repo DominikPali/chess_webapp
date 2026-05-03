@@ -1,19 +1,12 @@
-import sys
-import os
+"""
+Application entrypoint for the NotationLearner Flask app.
+"""
 
-_venv_python = os.path.join(os.path.dirname(os.path.abspath(__file__)), ".venv", "bin", "python")
-if os.path.exists(_venv_python) and sys.executable != _venv_python:
-    os.execv(_venv_python, [_venv_python] + sys.argv)
+from app import create_app
 
-from flask import Flask, render_template
-
-app = Flask(__name__)
-
-
-@app.route("/")
-def index():
-    return render_template("index.html")
+app = create_app()
 
 
 if __name__ == "__main__":
+    print(f"Database ready ({app.config['SQLALCHEMY_DATABASE_URI'].split('://')[0]}).")
     app.run(debug=True, port=5001)

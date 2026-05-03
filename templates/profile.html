@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+{% set active_page = "profile" %}
+
+{% block title %}Profile – NotationLearner{% endblock %}
+
+{% block content %}
+  <main class="nl-page-content">
+    <div class="container" style="max-width: 860px;">
+
+      <!-- Flash messages -->
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          {% for category, message in messages %}
+            <div class="nl-flash nl-flash--{{ category }}">{{ message }}</div>
+          {% endfor %}
+        {% endif %}
+      {% endwith %}
+
+      <!-- Profile card -->
+      <div class="nl-profile-card">
+        <div class="nl-avatar">{{ current_user.username[0].upper() }}</div>
+        <div class="nl-profile-info">
+          <h2 class="nl-profile-username">{{ current_user.username }}</h2>
+          <p class="nl-profile-meta">
+            {{ current_user.email }}
+            &middot;
+            Member since {{ current_user.created_at.strftime('%b %Y') }}
+          </p>
+        </div>
+        <div class="nl-profile-actions">
+          <a href="{{ url_for('edit_profile') }}" class="btn nl-btn-secondary nl-btn-sm">
+            <i class="bi bi-pencil me-1"></i> Edit Profile
+          </a>
+          <form method="POST" action="{{ url_for('delete_account') }}" class="d-inline"
+                onsubmit="return confirm('Are you sure you want to delete your account? This cannot be undone.');">
+            <button type="submit" class="btn nl-btn-danger nl-btn-sm">
+              <i class="bi bi-trash me-1"></i> Delete Account
+            </button>
+          </form>
+        </div>
+      </div>
+
+      <!-- Game History -->
+      <h3 class="nl-section-heading">
+        <i class="bi bi-collection me-2"></i>Game History
+      </h3>
+
+      {% if games %}
+        <div class="nl-table-wrap">
+          <table class="nl-game-table">
+            <thead>
+              <tr>
+                <th>DATE</th>
+                <th>OPPONENT</th>
+                <th>COLOR</th>
+                <th>RESULT</th>
+                <th>MOVES</th>
+                <th>ACTION</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for game in games %}
+                {%- set is_win = (game.color == 'white' and game.result == '1-0') or (game.color == 'black' and game.result == '0-1') -%}
+                {%- set is_draw = game.result in ['½-½', '1/2-1/2'] -%}
+                <tr>
+                  <td>{{ game.date_played.strftime('%Y-%m-%d') }}</td>
+                  <td>
+                    {% if game.opponent == 'Stockfish' %}
+                      <i class="bi bi-robot me-1" style="color: var(--nl-mid-light);"></i>
+                    {% else %}
+                      <i class="bi bi-person me-1" style="color: var(--nl-mid-light);"></i>
+                    {% endif %}
+                    {{ game.opponent }}
+                  </td>
+                  <td>
+                    <span class="nl-color-square nl-color-square--{{ game.color }}"></span>
+                    {{ game.color | capitalize }}
+                  </td>
+                  <td>
+                    {% if is_draw %}
+                      <span class="nl-result nl-result--draw">Draw (½–½)</span>
+                    {% elif is_win %}
+                      <span class="nl-result nl-result--win">Win ({{ game.result }})</span>
+                    {% else %}
+                      <span class="nl-result nl-result--loss">Loss ({{ game.result }})</span>
+                    {% endif %}
+                  </td>
+                  <td>{{ game.moves }}</td>
+                  <td>
+                    <a href="{{ url_for('analyse', game_id=game.id) }}" class="btn nl-btn-secondary nl-btn-sm">
+                      Analyse
+                    </a>
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% else %}
+        <p class="nl-empty-state">No games yet. Start playing to build your history!</p>
+      {% endif %}
+
+    </div>
+  </main>
+{% endblock %}

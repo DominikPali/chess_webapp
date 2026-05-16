@@ -30,6 +30,7 @@ function initPlayPage() {
 
   let selectedOpponent = "Stockfish";
   let selectedColor = "white";
+  let selectedBotElo = 1500;
   let gameResult = null;
 
   // Multiplayer state
@@ -41,6 +42,23 @@ function initPlayPage() {
   const roomWaiting = document.getElementById("room-waiting");
 
   // ── Setup option toggles ──
+  const botEloSection = document.getElementById("bot-elo-section");
+  const botEloSlider = document.getElementById("bot-elo-slider");
+  const botEloValue = document.getElementById("bot-elo-value");
+
+  function updateBotEloVisibility() {
+    if (!botEloSection) return;
+    botEloSection.style.display = selectedOpponent === "Stockfish" ? "block" : "none";
+  }
+
+  if (botEloSlider) {
+    botEloSlider.addEventListener("input", function() {
+      selectedBotElo = parseInt(this.value, 10);
+      if (botEloValue) botEloValue.textContent = selectedBotElo;
+    });
+  }
+  updateBotEloVisibility();
+
   document.querySelectorAll(".nl-setup-opt").forEach(function(btn) {
     btn.addEventListener("click", function() {
       document.querySelectorAll(".nl-setup-opt").forEach(function(b) {
@@ -48,6 +66,7 @@ function initPlayPage() {
       });
       btn.classList.add("active");
       selectedOpponent = btn.dataset.opponent;
+      updateBotEloVisibility();
     });
   });
 
@@ -79,13 +98,19 @@ function initPlayPage() {
       // Solo game (vs Stockfish or local friend)
       const data = await apiCall("/api/game/new", "POST", {
         opponent: selectedOpponent,
-        color: selectedColor
+        color: selectedColor,
+        bot_elo: selectedBotElo
       });
       if (data.success) {
         setupDiv.style.display = "none";
         gameArea.style.display = "block";
         updateBoard(data);
+        if (data.moves_list) updateMoveHistory(data.moves_list);
+        if (data.bot_error) showMessage(data.bot_error);
         document.getElementById("move-input").focus();
+        if (data.bot_pending) {
+          scheduleBotMove();
+        }
       }
     }
   });
@@ -224,7 +249,9 @@ function initPlayPage() {
       updateBoard(data);
       updateMoveHistory(data.moves_list);
 
-      if (data.message) {
+      if (data.bot_error) {
+        showMessage(data.bot_error);
+      } else if (data.message) {
         showMessage(data.message);
       }
 
@@ -232,12 +259,41 @@ function initPlayPage() {
         gameResult = data.result;
         showGameOver(data.message, data.result);
         if (roomCode) stopRoomPoll();
+      } else if (data.bot_pending) {
+        scheduleBotMove();
       }
     } else {
       showError(data.error);
     }
     input.focus();
   });
+
+  // ── Bot reply (delayed, so it doesn't feel instant) ──
+  function scheduleBotMove() {
+    const input = document.getElementById("move-input");
+    const status = document.getElementById("game-status");
+    input.disabled = true;
+    if (status) status.textContent = "Bot is thinking…";
+
+    const delayMs = 500 + Math.floor(Math.random() * 700); // 0.5–1.2s
+    setTimeout(async function() {
+      const data = await apiCall("/api/game/bot-move", "POST");
+      if (data.success) {
+        lastMoveCount = data.move_count;
+        updateBoard(data);
+        updateMoveHistory(data.moves_list);
+        if (data.message) showMessage(data.message);
+        if (data.is_game_over) {
+          gameResult = data.result;
+          showGameOver(data.message, data.result);
+        }
+      } else {
+        showMessage(data.error || "Bot move failed.");
+      }
+      input.disabled = false;
+      input.focus();
+    }, delayMs);
+  }
 
   // ── Hint toggle ──
   document.getElementById("hint-toggle").addEventListener("change", function() {

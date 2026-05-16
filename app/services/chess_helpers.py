@@ -16,6 +16,7 @@ SESSION_GAME_KEYS = (
     "game_opponent",
     "game_color",
     "game_active",
+    "game_bot_elo",
 )
 
 
@@ -66,10 +67,48 @@ def get_stockfish_hint(board, time_limit=0.5):
     return None
 
 
-def board_to_svg_data(board, last_move=None):
-    kwargs = {"size": 400}
+def get_stockfish_move(board, elo):
+    stockfish_path = current_app.config.get("STOCKFISH_PATH", "")
+    if not stockfish_path or not os.path.exists(stockfish_path):
+        return None
+
+    try:
+        elo = int(elo)
+    except (TypeError, ValueError):
+        elo = 1500
+    elo = max(600, min(2800, elo))
+
+    try:
+        with chess.engine.SimpleEngine.popen_uci(stockfish_path) as engine:
+            if elo >= 1320:
+                engine.configure({"UCI_LimitStrength": True, "UCI_Elo": elo})
+                limit = chess.engine.Limit(time=0.5)
+            else:
+                frac = (elo - 600) / (1320 - 600)
+                skill = int(frac * 10)
+                depth = max(1, int(1 + frac * 7))
+                time_budget = 0.05 + frac * 0.25
+                engine.configure(
+                    {"UCI_LimitStrength": False, "Skill Level": skill}
+                )
+                limit = chess.engine.Limit(depth=depth, time=time_budget)
+            result = engine.play(board, limit)
+            if result.move is not None and result.move in board.legal_moves:
+                return {"move_obj": result.move, "san": board.san(result.move)}
+    except Exception:
+        return None
+
+    return None
+
+
+def board_to_svg_data(board, last_move=None, orientation=chess.WHITE):
+    kwargs = {"size": 400, "orientation": orientation}
     if last_move:
         kwargs["lastmove"] = last_move
     if board.is_check():
         kwargs["check"] = board.king(board.turn)
     return chess.svg.board(board, **kwargs)
+
+
+def session_orientation():
+    return chess.BLACK if session.get("game_color") == "black" else chess.WHITE

@@ -1,11 +1,35 @@
+from datetime import datetime, timezone
+
 import chess
 from flask import jsonify, request
 from flask_login import current_user, login_required
 
 from app.extensions import db
 from app.models import ActiveGame, User
-from app.services.chess_helpers import board_to_svg_data, generate_game_code
+from app.services.chess_helpers import (
+    board_to_svg_data,
+    cleanup_expired_rooms,
+    generate_game_code,
+    is_room_expired,
+)
 from app.services.game_storage import create_saved_game
+
+
+def _expired_response():
+    return (
+        jsonify(
+            {
+                "success": False,
+                "error": "Game expired due to inactivity.",
+                "expired": True,
+            }
+        ),
+        410,
+    )
+
+
+def _orientation_for(my_color):
+    return chess.BLACK if my_color == "black" else chess.WHITE
 
 
 def register_room_api_routes(app):
@@ -39,6 +63,7 @@ def register_room_api_routes(app):
     @app.route("/api/room/join", methods=["POST"])
     @login_required
     def api_join_room():
+        cleanup_expired_rooms()
         code = (request.get_json() or {}).get("code", "").strip().upper()
         if not code:
             return jsonify({"success": False, "error": "No game code provided."}), 400
@@ -63,6 +88,7 @@ def register_room_api_routes(app):
             return jsonify({"success": False, "error": "This game is already full."}), 400
 
         room.status = "active"
+        room.activated_at = datetime.now(timezone.utc)
         db.session.commit()
 
         return jsonify(
@@ -80,6 +106,11 @@ def register_room_api_routes(app):
         room = ActiveGame.query.filter_by(code=code.upper()).first()
         if not room:
             return jsonify({"success": False, "error": "Room not found."}), 404
+
+        if is_room_expired(room):
+            db.session.delete(room)
+            db.session.commit()
+            return _expired_response()
 
         if room.white_user_id == current_user.id:
             my_color = "white"
@@ -99,7 +130,7 @@ def register_room_api_routes(app):
                 "success": True,
                 "status": room.status,
                 "fen": room.fen,
-                "svg": board_to_svg_data(board),
+                "svg": board_to_svg_data(board, orientation=_orientation_for(my_color)),
                 "turn": turn.capitalize(),
                 "is_my_turn": turn == my_color,
                 "my_color": my_color,
@@ -118,6 +149,10 @@ def register_room_api_routes(app):
         room = ActiveGame.query.filter_by(code=code.upper()).first()
         if not room:
             return jsonify({"success": False, "error": "Room not found."}), 404
+        if is_room_expired(room):
+            db.session.delete(room)
+            db.session.commit()
+            return _expired_response()
         if room.status != "active":
             return jsonify({"success": False, "error": "Game is not active."}), 400
 
@@ -128,6 +163,8 @@ def register_room_api_routes(app):
             return jsonify({"success": False, "error": "It's not your turn."}), 400
         if turn_color == "black" and room.black_user_id != current_user.id:
             return jsonify({"success": False, "error": "It's not your turn."}), 400
+
+        my_color = "white" if room.white_user_id == current_user.id else "black"
 
         move_san = (request.get_json() or {}).get("move", "").strip()
         if not move_san:
@@ -181,7 +218,7 @@ def register_room_api_routes(app):
                 "success": True,
                 "move": san,
                 "fen": board.fen(),
-                "svg": board_to_svg_data(board, last_move=move),
+                "svg": board_to_svg_data(board, last_move=move, orientation=_orientation_for(my_color)),
                 "turn": "White" if board.turn == chess.WHITE else "Black",
                 "move_count": len(moves_list),
                 "moves_list": moves_list,

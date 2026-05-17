@@ -1,13 +1,18 @@
 import os
 import random
 import string
+from datetime import datetime, timedelta, timezone
 
 import chess
 import chess.engine
 import chess.svg
 from flask import current_app, session
 
+from app.extensions import db
 from app.models import ActiveGame
+
+WAITING_TTL = timedelta(days=1)
+ACTIVE_TTL = timedelta(hours=12)
 
 SESSION_GAME_KEYS = (
     "game_fen",
@@ -112,3 +117,40 @@ def board_to_svg_data(board, last_move=None, orientation=chess.WHITE):
 
 def session_orientation():
     return chess.BLACK if session.get("game_color") == "black" else chess.WHITE
+
+
+def _ensure_utc(dt):
+    """SQLite returns naive datetimes; treat them as UTC."""
+    if dt is None:
+        return None
+    if dt.tzinfo is None:
+        return dt.replace(tzinfo=timezone.utc)
+    return dt
+
+
+def is_room_expired(room):
+    """True if the room's code/game has outlived its TTL."""
+    now = datetime.now(timezone.utc)
+    if room.status == "waiting":
+        created = _ensure_utc(room.created_at)
+        return created is not None and created + WAITING_TTL < now
+    if room.status == "active":
+        anchor = _ensure_utc(room.activated_at) or _ensure_utc(room.created_at)
+        return anchor is not None and anchor + ACTIVE_TTL < now
+    return False
+
+
+def cleanup_expired_rooms():
+    """Lazy sweep — delete every waiting/active room past its TTL.
+    Finished rooms are left to the save flow."""
+    rooms = ActiveGame.query.filter(
+        ActiveGame.status.in_(("waiting", "active"))
+    ).all()
+    deleted = 0
+    for room in rooms:
+        if is_room_expired(room):
+            db.session.delete(room)
+            deleted += 1
+    if deleted:
+        db.session.commit()
+    return deleted

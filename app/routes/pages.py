@@ -2,6 +2,7 @@ from flask import render_template
 from flask_login import current_user, login_required
 
 from app.models import ActiveGame, Game
+from app.services.chess_helpers import cleanup_expired_rooms
 
 
 def register_page_routes(app):
@@ -21,6 +22,7 @@ def register_page_routes(app):
     @app.route("/play/<code>")
     @login_required
     def play_room(code):
+        cleanup_expired_rooms()
         ActiveGame.query.filter_by(code=code.upper()).first_or_404()
         return render_template("play.html", room_code=code.upper())
 

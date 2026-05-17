@@ -155,10 +155,21 @@ function initPlayPage() {
     roomMyColor = null;
   });
 
+  function handleRoomExpired() {
+    stopRoomPoll();
+    roomWaiting.style.display = "none";
+    gameArea.style.display = "block";
+    showGameOver("Game expired due to inactivity.", null);
+  }
+
   // ── Waiting poll: check if opponent joined ──
   function startWaitingPoll() {
     roomPollInterval = setInterval(async function() {
       const data = await apiCall("/api/room/state/" + roomCode, "GET");
+      if (!data.success && data.expired) {
+        handleRoomExpired();
+        return;
+      }
       if (data.success && data.status === "active") {
         // Opponent joined!
         stopRoomPoll();
@@ -187,6 +198,10 @@ function initPlayPage() {
   function startRoomGamePoll() {
     roomPollInterval = setInterval(async function() {
       const data = await apiCall("/api/room/state/" + roomCode, "GET");
+      if (!data.success && data.expired) {
+        handleRoomExpired();
+        return;
+      }
       if (data.success) {
         if (data.move_count !== lastMoveCount) {
           lastMoveCount = data.move_count;
@@ -241,6 +256,11 @@ function initPlayPage() {
     } else {
       // Solo move
       data = await apiCall("/api/game/move", "POST", { move: moveStr });
+    }
+
+    if (!data.success && data.expired) {
+      handleRoomExpired();
+      return;
     }
 
     if (data.success) {

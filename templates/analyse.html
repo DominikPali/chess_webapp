@@ -23,6 +23,10 @@
                 vs {{ game.opponent }} &middot; {{ game.date_played.strftime('%Y-%m-%d') }}
               </span>
               <span id="analyse-result" class="nl-move-counter">{{ game.result }}</span>
+              <button id="btn-toggle-board" class="nl-board-toggle" title="Show/hide board" type="button" aria-pressed="false">
+                <i class="bi bi-eye-slash"></i>
+                <span class="nl-board-toggle-label">Hide board</span>
+              </button>
             </div>
             <!-- SVG Board -->
             <div id="analyse-board" class="nl-board-container">
@@ -63,6 +67,14 @@
             <h3 class="nl-panel-title">
               <i class="bi bi-cpu me-2"></i>Stockfish Analysis
             </h3>
+            <div class="nl-eval-bar" title="White advantage → right, Black advantage → left">
+              <div id="analyse-eval-fill" class="nl-eval-bar__fill" style="width: 50%;"></div>
+            </div>
+            <div class="nl-eval-row">
+              <span class="nl-eval-side">White</span>
+              <span id="analyse-eval-number" class="nl-eval-number">&mdash;</span>
+              <span class="nl-eval-side">Black</span>
+            </div>
             <div id="analyse-bestmove" class="nl-bestmove-display">
               <span class="nl-hint-loading">Navigate to a position to see the best move.</span>
             </div>

@@ -31,6 +31,7 @@ function initPlayPage() {
   let selectedOpponent = "Stockfish";
   let selectedColor = "white";
   let selectedBotElo = 1500;
+  let hintsEnabled = false;
   let gameResult = null;
 
   // Multiplayer state
@@ -45,10 +46,13 @@ function initPlayPage() {
   const botEloSection = document.getElementById("bot-elo-section");
   const botEloSlider = document.getElementById("bot-elo-slider");
   const botEloValue = document.getElementById("bot-elo-value");
+  const hintToggleSection = document.getElementById("hint-toggle-section");
+  const hintTogglePregame = document.getElementById("hint-toggle-pregame");
 
-  function updateBotEloVisibility() {
-    if (!botEloSection) return;
-    botEloSection.style.display = selectedOpponent === "Stockfish" ? "block" : "none";
+  function updateBotOnlyVisibility() {
+    const show = selectedOpponent === "Stockfish";
+    if (botEloSection) botEloSection.style.display = show ? "block" : "none";
+    if (hintToggleSection) hintToggleSection.style.display = show ? "block" : "none";
   }
 
   if (botEloSlider) {
@@ -57,7 +61,7 @@ function initPlayPage() {
       if (botEloValue) botEloValue.textContent = selectedBotElo;
     });
   }
-  updateBotEloVisibility();
+  updateBotOnlyVisibility();
 
   document.querySelectorAll(".nl-setup-opt").forEach(function(btn) {
     btn.addEventListener("click", function() {
@@ -66,7 +70,7 @@ function initPlayPage() {
       });
       btn.classList.add("active");
       selectedOpponent = btn.dataset.opponent;
-      updateBotEloVisibility();
+      updateBotOnlyVisibility();
     });
   });
 
@@ -96,6 +100,9 @@ function initPlayPage() {
       }
     } else {
       // Solo game (vs Stockfish or local friend)
+      hintsEnabled =
+        selectedOpponent === "Stockfish" &&
+        !!(hintTogglePregame && hintTogglePregame.checked);
       const data = await apiCall("/api/game/new", "POST", {
         opponent: selectedOpponent,
         color: selectedColor,
@@ -104,6 +111,8 @@ function initPlayPage() {
       if (data.success) {
         setupDiv.style.display = "none";
         gameArea.style.display = "block";
+        const hintPanel = document.getElementById("hint-panel");
+        if (hintPanel) hintPanel.style.display = hintsEnabled ? "block" : "none";
         updateBoard(data);
         if (data.moves_list) updateMoveHistory(data.moves_list);
         if (data.bot_error) showMessage(data.bot_error);
@@ -315,36 +324,13 @@ function initPlayPage() {
     }, delayMs);
   }
 
-  // ── Hint toggle ──
-  document.getElementById("hint-toggle").addEventListener("change", function() {
-    const hintDisplay = document.getElementById("hint-display");
-    hintDisplay.style.display = this.checked ? "block" : "none";
-    if (!this.checked) {
-      document.getElementById("hint-result").innerHTML = "";
-    }
-  });
-
-  // ── Get hint ──
-  document.getElementById("btn-get-hint").addEventListener("click", async function() {
-    const resultDiv = document.getElementById("hint-result");
-    resultDiv.innerHTML = '<span class="nl-hint-loading">Thinking...</span>';
-
-    var data;
-    if (roomCode) {
-      // For multiplayer, get hint based on current room state
-      const state = await apiCall("/api/room/state/" + roomCode, "GET");
-      if (state.success) {
-        data = await apiCall("/api/analyse/bestmove", "POST", { fen: state.fen });
-        if (data.success && data.best_move) {
-          resultDiv.innerHTML =
-            '<div class="nl-hint-move">Suggested: <strong>' + data.best_move + '</strong></div>' +
-            '<div class="nl-hint-eval">Evaluation: ' + data.evaluation + '</div>';
-          return;
-        }
-      }
-      resultDiv.innerHTML = '<div class="nl-hint-error">Could not get hint.</div>';
-    } else {
-      data = await apiCall("/api/game/hint", "GET");
+  // ── Get hint (bot mode only) ──
+  const getHintBtn = document.getElementById("btn-get-hint");
+  if (getHintBtn) {
+    getHintBtn.addEventListener("click", async function() {
+      const resultDiv = document.getElementById("hint-result");
+      resultDiv.innerHTML = '<span class="nl-hint-loading">Thinking...</span>';
+      const data = await apiCall("/api/game/hint", "GET");
       if (data.success) {
         resultDiv.innerHTML =
           '<div class="nl-hint-move">Suggested: <strong>' + data.hint_move + '</strong></div>' +
@@ -352,8 +338,8 @@ function initPlayPage() {
       } else {
         resultDiv.innerHTML = '<div class="nl-hint-error">' + data.error + '</div>';
       }
-    }
-  });
+    });
+  }
 
   // ── Help box toggle ──
   document.getElementById("help-toggle").addEventListener("click", function() {
@@ -538,7 +524,10 @@ function initPlayPage() {
     document.getElementById("move-input").value = "";
     document.getElementById("move-input").disabled = false;
     document.getElementById("game-over-overlay").style.display = "none";
-    document.getElementById("hint-result").innerHTML = "";
+    const hintResult = document.getElementById("hint-result");
+    if (hintResult) hintResult.innerHTML = "";
+    const hintPanel = document.getElementById("hint-panel");
+    if (hintPanel) hintPanel.style.display = "none";
     hideError();
     hideMessage();
     gameResult = null;
@@ -624,8 +613,11 @@ function initAnalysePage() {
       fen = gameData.moves[index].fen_after;
     }
 
-    // Get SVG for this FEN
-    const data = await apiCall("/api/analyse/svg", "POST", { fen: fen });
+    // Get SVG for this FEN (oriented from the player's side)
+    const data = await apiCall("/api/analyse/svg", "POST", {
+      fen: fen,
+      orientation: gameData.color,
+    });
     if (data.success) {
       document.getElementById("analyse-board").innerHTML = data.svg;
     }
@@ -634,13 +626,34 @@ function initAnalysePage() {
     fetchBestMove(fen);
   }
 
+  function renderEval(scoreNorm, mateIn) {
+    const fill = document.getElementById("analyse-eval-fill");
+    const number = document.getElementById("analyse-eval-number");
+    if (!fill || !number) return;
+
+    if (scoreNorm === null || scoreNorm === undefined) {
+      fill.style.width = "50%";
+      number.textContent = "—";
+      return;
+    }
+    const clamped = Math.max(-1, Math.min(1, scoreNorm));
+    fill.style.width = ((clamped + 1) / 2 * 100).toFixed(1) + "%";
+    let label = (clamped >= 0 ? "+" : "") + clamped.toFixed(2);
+    if (mateIn !== null && mateIn !== undefined) {
+      label += " (Mate in " + Math.abs(mateIn) + ")";
+    }
+    number.textContent = label;
+  }
+
   async function fetchBestMove(fen) {
     const container = document.getElementById("analyse-bestmove");
     if (!container) return;
     container.innerHTML = '<span class="nl-hint-loading">Analysing...</span>';
+    renderEval(null);
 
     const data = await apiCall("/api/analyse/bestmove", "POST", { fen: fen });
     if (data.success) {
+      renderEval(data.score_norm, data.mate_in);
       if (data.best_move) {
         container.innerHTML =
           '<div class="nl-hint-move"><i class="bi bi-cpu me-1"></i> Best move: <strong>' + data.best_move + '</strong></div>' +
@@ -649,6 +662,7 @@ function initAnalysePage() {
         container.innerHTML = '<span class="nl-hint-loading">' + (data.evaluation || "No analysis available.") + '</span>';
       }
     } else {
+      renderEval(null);
       container.innerHTML = '<div class="nl-hint-error">' + (data.error || "Stockfish not available.") + '</div>';
     }
   }
@@ -715,7 +729,34 @@ function initAnalysePage() {
 // Initialize on DOM ready
 // ─────────────────────────────────────────────────────────────
 
+function initBoardVisibilityToggle() {
+  const btn = document.getElementById("btn-toggle-board");
+  if (!btn) return;
+  const board =
+    document.getElementById("board-container") ||
+    document.getElementById("analyse-board");
+  if (!board) return;
+
+  const STORAGE_KEY = "nl-board-hidden";
+  const apply = (hidden) => {
+    board.classList.toggle("nl-board-container--hidden", hidden);
+    btn.setAttribute("aria-pressed", String(hidden));
+    const icon = btn.querySelector("i");
+    const label = btn.querySelector(".nl-board-toggle-label");
+    if (icon) icon.className = hidden ? "bi bi-eye" : "bi bi-eye-slash";
+    if (label) label.textContent = hidden ? "Show board" : "Hide board";
+  };
+
+  apply(localStorage.getItem(STORAGE_KEY) === "1");
+  btn.addEventListener("click", () => {
+    const next = !board.classList.contains("nl-board-container--hidden");
+    localStorage.setItem(STORAGE_KEY, next ? "1" : "0");
+    apply(next);
+  });
+}
+
 document.addEventListener("DOMContentLoaded", function() {
   initPlayPage();
   initAnalysePage();
+  initBoardVisibilityToggle();
 });

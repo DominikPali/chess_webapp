@@ -50,6 +50,12 @@
           >
             <i class="bi bi-person-circle"></i>
           </a>
+          {% if current_user.is_authenticated %}
+            <a href="{{ url_for('logout') }}" class="nl-logout-btn" title="Log out" aria-label="Log out">
+              <i class="bi bi-box-arrow-right"></i>
+              <span class="nl-logout-label">Log out</span>
+            </a>
+          {% endif %}
         </div>
       </div>
     </div>

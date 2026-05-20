@@ -101,7 +101,7 @@ body {
 .nl-link.active { color: var(--nl-mid) !important; }
 
 /* Profile button */
-.nl-profile-wrap { margin-left: auto; }
+.nl-profile-wrap { margin-left: auto; display: flex; align-items: center; gap: 0.5rem; }
 
 .nl-profile-btn {
   background: none;
@@ -1026,6 +1026,43 @@ body {
   font-size: 0.9rem;
 }
 
+.nl-eval-bar {
+  width: 100%;
+  height: 18px;
+  background: #1a1a1a;
+  border-radius: 4px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  position: relative;
+}
+
+.nl-eval-bar__fill {
+  height: 100%;
+  background: #f5f5f5;
+  transition: width 0.3s ease;
+}
+
+.nl-eval-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 0.35rem;
+  font-size: 0.8rem;
+  color: var(--nl-mid-light);
+}
+
+.nl-eval-number {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--nl-text, inherit);
+}
+
+.nl-eval-side {
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-size: 0.7rem;
+}
+
 /* =========================================================
    RESPONSIVE: GAME / ANALYSIS
    ========================================================= */
@@ -1045,5 +1082,89 @@ body {
   .nl-game-code {
     font-size: 1.8rem;
     letter-spacing: 0.2em;
+  }
+}
+
+/* ── Board visibility toggle ── */
+.nl-board-toggle {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.25rem 0.6rem;
+  font-size: 0.85rem;
+  line-height: 1;
+  color: var(--nl-text, #333);
+  background: transparent;
+  border: 1px solid var(--nl-border, #d0d0d0);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+.nl-board-toggle:hover {
+  background: var(--nl-off-white, #f5f5f5);
+  border-color: var(--nl-text-muted, #888);
+}
+.nl-board-toggle[aria-pressed="true"] {
+  background: var(--nl-off-white, #eef0ee);
+  border-color: var(--nl-text-muted, #888);
+}
+.nl-board-toggle .nl-board-toggle-label {
+  font-weight: 500;
+}
+
+.nl-board-container--hidden {
+  position: relative;
+  min-height: 400px;
+}
+.nl-board-container--hidden > svg {
+  display: none;
+}
+.nl-board-container--hidden::before {
+  content: "Board hidden — rely on move history";
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 360px;
+  color: var(--nl-text-muted, #888);
+  font-style: italic;
+  font-size: 0.95rem;
+  border: 1px dashed var(--nl-border, #d0d0d0);
+  border-radius: 8px;
+  background: var(--nl-off-white, #fafafa);
+}
+
+/* ── Logout button (navbar) ── */
+.nl-logout-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.3rem 0.7rem;
+  font-size: 0.9rem;
+  line-height: 1;
+  color: var(--nl-text, #333);
+  background: transparent;
+  border: 1px solid var(--nl-border, #d0d0d0);
+  border-radius: 6px;
+  text-decoration: none;
+  transition: color 0.15s ease, border-color 0.15s ease, background-color 0.15s ease;
+}
+.nl-logout-btn:hover,
+.nl-logout-btn:focus {
+  color: #b02a37;
+  border-color: #b02a37;
+  background: rgba(176, 42, 55, 0.06);
+  text-decoration: none;
+}
+.nl-logout-btn i {
+  font-size: 1rem;
+}
+@media (max-width: 576px) {
+  .nl-logout-btn .nl-logout-label {
+    display: none;
+  }
+  .nl-logout-btn {
+    padding: 0.3rem 0.5rem;
   }
 }

@@ -39,6 +39,14 @@
             </div>
           </div>
 
+          <div class="mb-3" id="hint-toggle-section">
+            <label class="nl-toggle-label">
+              <input type="checkbox" id="hint-toggle-pregame" class="nl-toggle-checkbox" />
+              <span class="nl-toggle-switch"></span>
+              <span class="nl-toggle-text">Enable Stockfish hints during the game</span>
+            </label>
+          </div>
+
           <div class="mb-4">
             <label class="nl-form-label">Play as</label>
             <div class="d-flex gap-2">
@@ -102,6 +110,10 @@
               <div class="nl-status-bar">
                 <span id="game-status" class="nl-status-text">White to move</span>
                 <span id="game-move-count" class="nl-move-counter">Move 1</span>
+                <button id="btn-toggle-board" class="nl-board-toggle" title="Show/hide board" type="button" aria-pressed="false">
+                  <i class="bi bi-eye-slash"></i>
+                  <span class="nl-board-toggle-label">Hide board</span>
+                </button>
               </div>
               <!-- SVG Board -->
               <div id="board-container" class="nl-board-container">
@@ -135,24 +147,15 @@
               </div>
             </div>
 
-            <!-- Hint panel -->
-            <div class="nl-panel">
+            <!-- Hint panel (only shown when enabled pre-game vs Stockfish) -->
+            <div id="hint-panel" class="nl-panel" style="display: none;">
               <h3 class="nl-panel-title">
                 <i class="bi bi-lightbulb me-2"></i>Hints
               </h3>
-              <div class="d-flex align-items-center gap-3 mb-2">
-                <label class="nl-toggle-label">
-                  <input type="checkbox" id="hint-toggle" class="nl-toggle-checkbox" />
-                  <span class="nl-toggle-switch"></span>
-                  <span class="nl-toggle-text">Enable hints</span>
-                </label>
-              </div>
-              <div id="hint-display" class="nl-hint-display" style="display: none;">
-                <button id="btn-get-hint" class="btn nl-btn-secondary nl-btn-sm mb-2">
-                  <i class="bi bi-magic me-1"></i> Get Hint
-                </button>
-                <div id="hint-result" class="nl-hint-result"></div>
-              </div>
+              <button id="btn-get-hint" class="btn nl-btn-secondary nl-btn-sm mb-2">
+                <i class="bi bi-magic me-1"></i> Get Hint
+              </button>
+              <div id="hint-result" class="nl-hint-result"></div>
             </div>
 
             <!-- Help box -->

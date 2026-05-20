@@ -246,6 +246,8 @@ def register_game_api_routes(app):
                     "success": True,
                     "hint_move": hint["move"],
                     "evaluation": hint["evaluation"],
+                    "score_norm": hint["score_norm"],
+                    "mate_in": hint["mate_in"],
                 }
             )
 

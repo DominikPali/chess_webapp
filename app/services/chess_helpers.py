@@ -1,3 +1,4 @@
+import math
 import os
 import random
 import string
@@ -59,13 +60,24 @@ def get_stockfish_hint(board, time_limit=0.5):
             score = result.get("score")
             if best_move:
                 evaluation = ""
+                score_norm = 0.0
+                mate_in = None
                 if score:
                     pov = score.white()
                     if pov.is_mate():
-                        evaluation = f"Mate in {pov.mate()}"
+                        mate_in = pov.mate()
+                        evaluation = f"Mate in {mate_in}"
+                        score_norm = 1.0 if mate_in > 0 else -1.0
                     else:
-                        evaluation = f"{pov.score() / 100.0:+.1f}"
-                return {"move": board.san(best_move), "evaluation": evaluation}
+                        cp = pov.score()
+                        evaluation = f"{cp / 100.0:+.1f}"
+                        score_norm = 2.0 / (1.0 + math.exp(-cp / 400.0)) - 1.0
+                return {
+                    "move": board.san(best_move),
+                    "evaluation": evaluation,
+                    "score_norm": score_norm,
+                    "mate_in": mate_in,
+                }
     except Exception:
         return None
 

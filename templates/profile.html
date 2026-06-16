@@ -7,7 +7,6 @@
   <main class="nl-page-content">
     <div class="container" style="max-width: 860px;">
 
-      <!-- Flash messages -->
       {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
           {% for category, message in messages %}
@@ -16,7 +15,6 @@
         {% endif %}
       {% endwith %}
 
-      <!-- Profile card -->
       <div class="nl-profile-card">
         <div class="nl-avatar">{{ current_user.username[0].upper() }}</div>
         <div class="nl-profile-info">
@@ -40,7 +38,59 @@
         </div>
       </div>
 
-      <!-- Game History -->
+      {%- set wins = current_user.wins or 0 -%}
+      {%- set draws = current_user.draws or 0 -%}
+      {%- set losses = current_user.losses or 0 -%}
+      {%- set total = wins + draws + losses -%}
+
+      <h3 class="nl-section-heading">
+        <i class="bi bi-bar-chart me-2"></i>Statistics
+      </h3>
+
+      {% if total > 0 %}
+        <div class="nl-stats-grid">
+          <div class="nl-stat-card nl-stat-card--win">
+            <i class="bi bi-trophy nl-stat-icon"></i>
+            <span class="nl-stat-value">{{ wins }}</span>
+            <span class="nl-stat-label">Wins</span>
+          </div>
+          <div class="nl-stat-card nl-stat-card--draw">
+            <i class="bi bi-dash-circle nl-stat-icon"></i>
+            <span class="nl-stat-value">{{ draws }}</span>
+            <span class="nl-stat-label">Draws</span>
+          </div>
+          <div class="nl-stat-card nl-stat-card--loss">
+            <i class="bi bi-x-circle nl-stat-icon"></i>
+            <span class="nl-stat-value">{{ losses }}</span>
+            <span class="nl-stat-label">Losses</span>
+          </div>
+        </div>
+
+        <div class="nl-stats-bar" role="img"
+             aria-label="{{ wins }} wins, {{ draws }} draws, {{ losses }} losses">
+          {% if wins %}
+            <div class="nl-stats-bar__seg nl-stats-bar__seg--win"
+                 style="width: {{ (wins / total * 100) | round(2) }}%;"></div>
+          {% endif %}
+          {% if draws %}
+            <div class="nl-stats-bar__seg nl-stats-bar__seg--draw"
+                 style="width: {{ (draws / total * 100) | round(2) }}%;"></div>
+          {% endif %}
+          {% if losses %}
+            <div class="nl-stats-bar__seg nl-stats-bar__seg--loss"
+                 style="width: {{ (losses / total * 100) | round(2) }}%;"></div>
+          {% endif %}
+        </div>
+
+        <p class="nl-stats-caption">
+          {{ total }} game{{ '' if total == 1 else 's' }} played
+          &middot;
+          Win rate {{ (wins / total * 100) | round(1) }}%
+        </p>
+      {% else %}
+        <p class="nl-empty-state">No stats yet. Finish and save a game to start tracking your record!</p>
+      {% endif %}
+
       <h3 class="nl-section-heading">
         <i class="bi bi-collection me-2"></i>Game History
       </h3>

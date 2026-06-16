@@ -1,13 +1,3 @@
-/* =========================================================
-   NotationLearner – style.css
-   Colour palette
-     --nl-lightest  : #9CBC79  (light sage)
-     --nl-mid-light : #75994E  (medium sage)
-     --nl-mid       : #567931  (primary forest green)
-     --nl-dark      : #3F621A  (deep green)
-     --nl-darkest   : #254107  (near-black green)
-   ========================================================= */
-
 :root {
   --nl-lightest : #9CBC79;
   --nl-mid-light: #75994E;
@@ -43,9 +33,6 @@ body {
   min-height: 100vh;
 }
 
-/* =========================================================
-   NAVBAR
-   ========================================================= */
 .nl-navbar {
   background-color: var(--nl-white);
   border-bottom: 1.5px solid var(--nl-border);
@@ -100,7 +87,6 @@ body {
 .nl-link.active::after { transform: scaleX(1); }
 .nl-link.active { color: var(--nl-mid) !important; }
 
-/* Profile button */
 .nl-profile-wrap { margin-left: auto; display: flex; align-items: center; gap: 0.5rem; }
 
 .nl-profile-btn {
@@ -125,16 +111,12 @@ body {
   color: var(--nl-mid);
 }
 
-/* Mobile toggler */
 .nl-toggler {
   border-color: var(--nl-border);
   padding: 0.3rem 0.5rem;
 }
 .nl-toggler:focus { box-shadow: 0 0 0 3px rgba(86,121,49,0.25); }
 
-/* =========================================================
-   HERO SECTION
-   ========================================================= */
 .nl-hero {
   flex: 1;
   padding: 4rem 1rem;
@@ -162,7 +144,6 @@ body {
   margin-bottom: 0;
 }
 
-/* ── Buttons ── */
 .nl-btn-primary {
   display: inline-flex;
   align-items: center;
@@ -228,9 +209,6 @@ body {
   transform: translateY(0);
 }
 
-/* =========================================================
-   FOOTER
-   ========================================================= */
 .nl-footer {
   background-color: var(--nl-white);
   border-top: 1.5px solid var(--nl-border);
@@ -249,9 +227,6 @@ body {
 
 .nl-footer-link:hover { color: var(--nl-darkest); text-decoration: underline; }
 
-/* =========================================================
-   AUTH CARD  (login / register / edit profile)
-   ========================================================= */
 .nl-auth-card {
   background: var(--nl-white);
   border: 1.5px solid var(--nl-border);
@@ -319,9 +294,6 @@ body {
 
 .nl-auth-footer-text a:hover { color: var(--nl-darkest); }
 
-/* =========================================================
-   FLASH MESSAGES
-   ========================================================= */
 .nl-flash {
   border-radius: var(--nl-radius);
   padding: 0.65rem 1rem;
@@ -341,9 +313,6 @@ body {
   border: 1px solid #f0c0c0;
 }
 
-/* =========================================================
-   PROFILE PAGE
-   ========================================================= */
 .nl-page-content {
   flex: 1;
   padding: 2.5rem 1rem;
@@ -429,7 +398,79 @@ body {
   transform: translateY(-1px);
 }
 
-/* ── Section heading ── */
+.nl-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+  margin-bottom: 1.1rem;
+}
+
+.nl-stat-card {
+  background: var(--nl-white);
+  border: 1.5px solid var(--nl-border);
+  border-radius: var(--nl-radius);
+  box-shadow: var(--nl-shadow);
+  padding: 1.25rem 1rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  border-top-width: 4px;
+}
+
+.nl-stat-icon { font-size: 1.4rem; margin-bottom: 0.15rem; }
+.nl-stat-value {
+  font-family: var(--font-display);
+  font-size: 2rem;
+  font-weight: 700;
+  line-height: 1;
+}
+.nl-stat-label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--nl-mid-light);
+}
+
+.nl-stat-card--win  { border-top-color: var(--nl-mid); }
+.nl-stat-card--win  .nl-stat-icon,
+.nl-stat-card--win  .nl-stat-value { color: var(--nl-darkest); }
+.nl-stat-card--draw { border-top-color: #9aa39a; }
+.nl-stat-card--draw .nl-stat-icon,
+.nl-stat-card--draw .nl-stat-value { color: #6b756b; }
+.nl-stat-card--loss { border-top-color: #c0392b; }
+.nl-stat-card--loss .nl-stat-icon,
+.nl-stat-card--loss .nl-stat-value { color: #c0392b; }
+
+.nl-stats-bar {
+  display: flex;
+  width: 100%;
+  height: 16px;
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--nl-off-white);
+  border: 1.5px solid var(--nl-border);
+}
+
+.nl-stats-bar__seg { height: 100%; transition: width 0.3s ease; }
+.nl-stats-bar__seg--win  { background: var(--nl-mid); }
+.nl-stats-bar__seg--draw { background: #9aa39a; }
+.nl-stats-bar__seg--loss { background: #c0392b; }
+
+.nl-stats-caption {
+  margin-top: 0.6rem;
+  margin-bottom: 2.5rem;
+  font-size: 0.9rem;
+  color: var(--nl-mid-light);
+}
+
+@media (max-width: 540px) {
+  .nl-stats-grid { gap: 0.6rem; }
+  .nl-stat-card { padding: 1rem 0.5rem; }
+  .nl-stat-value { font-size: 1.6rem; }
+}
+
 .nl-section-heading {
   font-family: var(--font-display);
   font-size: 1.35rem;
@@ -438,7 +479,6 @@ body {
   margin-bottom: 1rem;
 }
 
-/* ── Game table ── */
 .nl-table-wrap {
   background: var(--nl-white);
   border: 1.5px solid var(--nl-border);
@@ -478,13 +518,11 @@ body {
 
 .nl-game-table tbody tr:hover { background-color: var(--nl-off-white); }
 
-/* ── Result labels ── */
 .nl-result { font-size: 0.93rem; }
 .nl-result--win  { font-weight: 700; color: var(--nl-darkest); }
 .nl-result--loss { color: #a0a8a0; }
 .nl-result--draw { color: var(--nl-text); }
 
-/* ── Color square ── */
 .nl-color-square {
   display: inline-block;
   width: 14px;
@@ -505,23 +543,18 @@ body {
   background-color: #3a3a3a;
 }
 
-/* ── Active profile button ── */
 .nl-profile-btn--active {
   border-color: var(--nl-mid);
   color: var(--nl-mid);
   background: var(--nl-off-white);
 }
 
-/* ── Empty state ── */
 .nl-empty-state {
   color: var(--nl-mid-light);
   font-size: 0.97rem;
   padding: 2rem 0;
 }
 
-/* =========================================================
-   RESPONSIVE TWEAKS
-   ========================================================= */
 @media (max-width: 576px) {
   .nl-btn-primary,
   .nl-btn-secondary {
@@ -530,9 +563,6 @@ body {
   }
 }
 
-/* =========================================================
-   GAME SETUP
-   ========================================================= */
 .nl-game-setup {
   display: flex;
   align-items: center;
@@ -572,9 +602,6 @@ body {
   font-weight: 700;
 }
 
-/* =========================================================
-   GAME AREA
-   ========================================================= */
 .nl-game-area {
   position: relative;
 }
@@ -655,9 +682,6 @@ body {
   border-radius: var(--nl-radius);
 }
 
-/* =========================================================
-   SIDE PANELS
-   ========================================================= */
 .nl-panel {
   background: var(--nl-white);
   border: 1.5px solid var(--nl-border);
@@ -675,7 +699,6 @@ body {
   margin-bottom: 0.75rem;
 }
 
-/* ── Move history ── */
 .nl-move-history {
   max-height: 260px;
   overflow-y: auto;
@@ -707,7 +730,6 @@ body {
   background: var(--nl-off-white);
 }
 
-/* ── Hint panel ── */
 .nl-toggle-label {
   display: flex;
   align-items: center;
@@ -792,7 +814,6 @@ body {
   min-height: 1.5rem;
 }
 
-/* ── Help box ── */
 .nl-help-toggle {
   cursor: pointer;
   display: flex;
@@ -832,9 +853,6 @@ body {
   padding: 0.3rem 0 !important;
 }
 
-/* =========================================================
-   GAME OVER OVERLAY
-   ========================================================= */
 .nl-game-over-overlay {
   position: fixed;
   top: 0;
@@ -872,9 +890,6 @@ body {
   margin-bottom: 1.5rem;
 }
 
-/* =========================================================
-   ANALYSIS PAGE
-   ========================================================= */
 .nl-back-link {
   display: inline-flex;
   align-items: center;
@@ -944,10 +959,6 @@ body {
   margin: 0;
 }
 
-/* =========================================================
-   MULTIPLAYER: JOIN / ROOM CODE
-   ========================================================= */
-
 .nl-join-divider {
   text-align: center;
   margin: 1.25rem 0;
@@ -1001,10 +1012,6 @@ body {
   font-size: 0.9rem;
   color: var(--nl-mid-light);
 }
-
-/* =========================================================
-   STOCKFISH BEST MOVE (ANALYSIS)
-   ========================================================= */
 
 .nl-bestmove-display {
   padding: 0.5rem 0;
@@ -1063,9 +1070,6 @@ body {
   font-size: 0.7rem;
 }
 
-/* =========================================================
-   RESPONSIVE: GAME / ANALYSIS
-   ========================================================= */
 @media (max-width: 992px) {
   .nl-board-container svg {
     max-width: 350px;
@@ -1085,7 +1089,6 @@ body {
   }
 }
 
-/* ── Board visibility toggle ── */
 .nl-board-toggle {
   margin-left: auto;
   display: inline-flex;
@@ -1135,7 +1138,6 @@ body {
   background: var(--nl-off-white, #fafafa);
 }
 
-/* ── Logout button (navbar) ── */
 .nl-logout-btn {
   display: inline-flex;
   align-items: center;

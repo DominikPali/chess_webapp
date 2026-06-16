@@ -4,7 +4,18 @@ import chess
 import chess.pgn
 
 from app.extensions import db
-from app.models import Game, Move
+from app.models import Game, Move, User
+
+DRAW_RESULTS = ("1/2-1/2", "½-½")
+
+
+def _result_for_user(color, result):
+    """Classify a finished game from the saving user's perspective."""
+    if result in DRAW_RESULTS:
+        return "draw"
+    if (color == "white" and result == "1-0") or (color == "black" and result == "0-1"):
+        return "win"
+    return "loss"
 
 
 def create_saved_game(user_id, opponent, color, result, moves_list, white_name, black_name):
@@ -46,6 +57,16 @@ def create_saved_game(user_id, opponent, color, result, moves_list, white_name, 
                 fen_after=replay_board.fen(),
             )
         )
+
+    user = db.session.get(User, user_id)
+    if user is not None:
+        outcome = _result_for_user(color, result)
+        if outcome == "win":
+            user.wins = (user.wins or 0) + 1
+        elif outcome == "draw":
+            user.draws = (user.draws or 0) + 1
+        else:
+            user.losses = (user.losses or 0) + 1
 
     db.session.commit()
     return game

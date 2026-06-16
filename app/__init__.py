@@ -12,14 +12,27 @@ def _add_missing_columns():
     """One-shot schema shim for SQLite — keeps existing DBs working
     without an Alembic migration system."""
     inspector = inspect(db.engine)
-    if "active_game" not in inspector.get_table_names():
-        return
-    cols = {c["name"] for c in inspector.get_columns("active_game")}
-    if "activated_at" not in cols:
+    table_names = inspector.get_table_names()
+
+    if "active_game" in table_names:
+        cols = {c["name"] for c in inspector.get_columns("active_game")}
+        if "activated_at" not in cols:
+            with db.engine.begin() as conn:
+                conn.execute(
+                    text("ALTER TABLE active_game ADD COLUMN activated_at DATETIME")
+                )
+
+    if "user" in table_names:
+        user_cols = {c["name"] for c in inspector.get_columns("user")}
         with db.engine.begin() as conn:
-            conn.execute(
-                text("ALTER TABLE active_game ADD COLUMN activated_at DATETIME")
-            )
+            for col in ("wins", "draws", "losses"):
+                if col not in user_cols:
+                    conn.execute(
+                        text(
+                            f"ALTER TABLE user ADD COLUMN {col} "
+                            "INTEGER NOT NULL DEFAULT 0"
+                        )
+                    )
 
 
 def create_app():

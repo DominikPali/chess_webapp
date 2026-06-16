@@ -7,17 +7,14 @@
   <main class="nl-page-content">
     <div class="container" style="max-width: 1100px;">
 
-      <!-- Back link -->
       <a href="{{ url_for('profile') }}" class="nl-back-link">
         <i class="bi bi-arrow-left me-1"></i> Back to Game History
       </a>
 
       <div class="row g-4 mt-1">
 
-        <!-- Left column: Board -->
         <div class="col-lg-7">
           <div class="nl-board-card">
-            <!-- Game info bar -->
             <div class="nl-status-bar">
               <span id="analyse-info" class="nl-status-text">
                 vs {{ game.opponent }} &middot; {{ game.date_played.strftime('%Y-%m-%d') }}
@@ -28,11 +25,8 @@
                 <span class="nl-board-toggle-label">Hide board</span>
               </button>
             </div>
-            <!-- SVG Board -->
             <div id="analyse-board" class="nl-board-container">
-              <!-- SVG injected here by JS -->
             </div>
-            <!-- Navigation controls -->
             <div class="nl-analyse-controls">
               <button id="btn-start" class="btn nl-btn-secondary nl-btn-sm" title="Go to start">
                 <i class="bi bi-skip-backward-fill"></i>
@@ -51,18 +45,15 @@
           </div>
         </div>
 
-        <!-- Right column: Move list -->
         <div class="col-lg-5">
           <div class="nl-panel">
             <h3 class="nl-panel-title">
               <i class="bi bi-list-ol me-2"></i>Moves
             </h3>
             <div id="analyse-moves" class="nl-analyse-move-list">
-              <!-- Populated by JS -->
             </div>
           </div>
 
-          <!-- Stockfish best move panel -->
           <div class="nl-panel">
             <h3 class="nl-panel-title">
               <i class="bi bi-cpu me-2"></i>Stockfish Analysis

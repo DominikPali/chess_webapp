@@ -7,7 +7,6 @@
   <main class="nl-page-content">
     <div class="container" style="max-width: 1100px;">
 
-      <!-- ── Game setup (shown before game starts) ── -->
       <div id="game-setup" class="nl-game-setup">
         <div class="nl-setup-card">
           <h2 class="nl-setup-title">Start a New Game</h2>
@@ -63,7 +62,6 @@
             Start Game
           </button>
 
-          <!-- Join by code -->
           <div class="nl-join-divider">
             <span>or</span>
           </div>
@@ -82,7 +80,6 @@
         </div>
       </div>
 
-      <!-- ── Waiting for opponent (shown after creating a friend game) ── -->
       <div id="room-waiting" class="nl-game-setup" style="display: none;">
         <div class="nl-setup-card text-center">
           <h2 class="nl-setup-title">Waiting for Opponent</h2>
@@ -99,14 +96,11 @@
         </div>
       </div>
 
-      <!-- ── Active game area (hidden until game starts) ── -->
       <div id="game-area" class="nl-game-area" style="display: none;">
         <div class="row g-4">
 
-          <!-- Left column: Board -->
           <div class="col-lg-7">
             <div class="nl-board-card">
-              <!-- Status bar -->
               <div class="nl-status-bar">
                 <span id="game-status" class="nl-status-text">White to move</span>
                 <span id="game-move-count" class="nl-move-counter">Move 1</span>
@@ -115,11 +109,8 @@
                   <span class="nl-board-toggle-label">Hide board</span>
                 </button>
               </div>
-              <!-- SVG Board -->
               <div id="board-container" class="nl-board-container">
-                <!-- SVG injected here -->
               </div>
-              <!-- Move input -->
               <div class="nl-input-area">
                 <form id="move-form" class="d-flex gap-2" autocomplete="off">
                   <input type="text" id="move-input" class="form-control nl-form-control nl-move-input"
@@ -134,10 +125,8 @@
             </div>
           </div>
 
-          <!-- Right column: Panels -->
           <div class="col-lg-5">
 
-            <!-- Move history -->
             <div class="nl-panel">
               <h3 class="nl-panel-title">
                 <i class="bi bi-clock-history me-2"></i>Move History
@@ -147,7 +136,6 @@
               </div>
             </div>
 
-            <!-- Hint panel (only shown when enabled pre-game vs Stockfish) -->
             <div id="hint-panel" class="nl-panel" style="display: none;">
               <h3 class="nl-panel-title">
                 <i class="bi bi-lightbulb me-2"></i>Hints
@@ -158,7 +146,6 @@
               <div id="hint-result" class="nl-hint-result"></div>
             </div>
 
-            <!-- Help box -->
             <div class="nl-panel">
               <h3 class="nl-panel-title nl-help-toggle" id="help-toggle">
                 <i class="bi bi-question-circle me-2"></i>Notation Help
@@ -186,7 +173,6 @@
               </div>
             </div>
 
-            <!-- Game controls -->
             <div class="nl-panel">
               <div class="d-flex gap-2">
                 <button id="btn-resign" class="btn nl-btn-danger nl-btn-sm" style="flex:1;">
@@ -198,10 +184,9 @@
               </div>
             </div>
 
-          </div><!-- /col -->
-        </div><!-- /row -->
+          </div>
+        </div>
 
-        <!-- Game over overlay -->
         <div id="game-over-overlay" class="nl-game-over-overlay" style="display: none;">
           <div class="nl-game-over-card">
             <h2 id="game-over-title" class="nl-game-over-title">Game Over</h2>
@@ -217,7 +202,7 @@
           </div>
         </div>
 
-      </div><!-- /game-area -->
+      </div>
 
     </div>
   </main>

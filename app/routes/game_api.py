@@ -87,8 +87,6 @@ def register_game_api_routes(app):
         session["game_active"] = True
         session["game_bot_elo"] = bot_elo
 
-        # Bot's opening move (if user picked black) is triggered by the
-        # frontend via /api/game/bot-move so we can introduce a delay.
         bot_pending = opponent == "Stockfish" and color == "black"
 
         return jsonify(

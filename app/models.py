@@ -15,6 +15,9 @@ class User(UserMixin, db.Model):
     email = db.Column(db.String(120), unique=True, nullable=False)
     password_hash = db.Column(db.String(256), nullable=False)
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+    wins = db.Column(db.Integer, nullable=False, default=0)
+    draws = db.Column(db.Integer, nullable=False, default=0)
+    losses = db.Column(db.Integer, nullable=False, default=0)
     games = db.relationship(
         "Game",
         backref="user",

@@ -1,12 +1,3 @@
-/**
- * main.js - NotationLearner Frontend Logic
- * Handles game play (solo + multiplayer), analysis, and UI interactions.
- */
-
-// ─────────────────────────────────────────────────────────────
-// Utility: API helper
-// ─────────────────────────────────────────────────────────────
-
 async function apiCall(url, method, body) {
   const options = {
     method: method || "GET",
@@ -19,14 +10,10 @@ async function apiCall(url, method, body) {
   return await response.json();
 }
 
-// ─────────────────────────────────────────────────────────────
-// GAME PLAY PAGE
-// ─────────────────────────────────────────────────────────────
-
 function initPlayPage() {
   const setupDiv = document.getElementById("game-setup");
   const gameArea = document.getElementById("game-area");
-  if (!setupDiv || !gameArea) return; // not on play page
+  if (!setupDiv || !gameArea) return;
 
   let selectedOpponent = "Stockfish";
   let selectedColor = "white";
@@ -34,7 +21,6 @@ function initPlayPage() {
   let hintsEnabled = false;
   let gameResult = null;
 
-  // Multiplayer state
   let roomCode = window.ROOM_CODE || null;
   let roomMyColor = null;
   let roomPollInterval = null;
@@ -42,7 +28,6 @@ function initPlayPage() {
 
   const roomWaiting = document.getElementById("room-waiting");
 
-  // ── Setup option toggles ──
   const botEloSection = document.getElementById("bot-elo-section");
   const botEloSlider = document.getElementById("bot-elo-slider");
   const botEloValue = document.getElementById("bot-elo-value");
@@ -84,10 +69,9 @@ function initPlayPage() {
     });
   });
 
-  // ── Start game ──
   document.getElementById("btn-start-game").addEventListener("click", async function() {
     if (selectedOpponent === "Friend") {
-      // Create a multiplayer room
+
       const data = await apiCall("/api/room/create", "POST", { color: selectedColor });
       if (data.success) {
         roomCode = data.code;
@@ -95,11 +79,11 @@ function initPlayPage() {
         setupDiv.style.display = "none";
         roomWaiting.style.display = "flex";
         document.getElementById("room-code-display").textContent = roomCode;
-        // Poll for opponent to join
+
         startWaitingPoll();
       }
     } else {
-      // Solo game (vs Stockfish or local friend)
+
       hintsEnabled =
         selectedOpponent === "Stockfish" &&
         !!(hintTogglePregame && hintTogglePregame.checked);
@@ -124,7 +108,6 @@ function initPlayPage() {
     }
   });
 
-  // ── Join game by code ──
   document.getElementById("btn-join-game").addEventListener("click", async function() {
     const codeInput = document.getElementById("join-code-input");
     const code = codeInput.value.trim().toUpperCase();
@@ -139,7 +122,7 @@ function initPlayPage() {
 
     const data = await apiCall("/api/room/join", "POST", { code: code });
     if (data.success) {
-      // Redirect to the room URL
+
       window.location.href = "/play/" + data.code;
     } else {
       joinError.textContent = data.error;
@@ -147,7 +130,6 @@ function initPlayPage() {
     }
   });
 
-  // Allow Enter to join
   document.getElementById("join-code-input").addEventListener("keydown", function(e) {
     if (e.key === "Enter") {
       e.preventDefault();
@@ -155,7 +137,6 @@ function initPlayPage() {
     }
   });
 
-  // ── Cancel waiting room ──
   document.getElementById("btn-cancel-room").addEventListener("click", function() {
     stopRoomPoll();
     roomWaiting.style.display = "none";
@@ -171,7 +152,6 @@ function initPlayPage() {
     showGameOver("Game expired due to inactivity.", null);
   }
 
-  // ── Waiting poll: check if opponent joined ──
   function startWaitingPoll() {
     roomPollInterval = setInterval(async function() {
       const data = await apiCall("/api/room/state/" + roomCode, "GET");
@@ -180,7 +160,7 @@ function initPlayPage() {
         return;
       }
       if (data.success && data.status === "active") {
-        // Opponent joined!
+
         stopRoomPoll();
         roomMyColor = data.my_color;
         roomWaiting.style.display = "none";
@@ -190,7 +170,7 @@ function initPlayPage() {
         updateMoveHistory(data.moves_list || []);
         updateTurnIndicator(data);
         document.getElementById("move-input").focus();
-        // Start game polling
+
         startRoomGamePoll();
       }
     }, 2000);
@@ -203,7 +183,6 @@ function initPlayPage() {
     }
   }
 
-  // ── Room game poll: check for opponent moves ──
   function startRoomGamePoll() {
     roomPollInterval = setInterval(async function() {
       const data = await apiCall("/api/room/state/" + roomCode, "GET");
@@ -228,7 +207,7 @@ function initPlayPage() {
             stopRoomPoll();
           }
         }
-        // Also check if game was resigned by opponent
+
         if (data.status === "finished" && !data.is_game_over) {
           gameResult = data.result;
           showGameOver("Opponent resigned. You win!", data.result);
@@ -248,7 +227,6 @@ function initPlayPage() {
     }
   }
 
-  // ── Submit move ──
   document.getElementById("move-form").addEventListener("submit", async function(e) {
     e.preventDefault();
     const input = document.getElementById("move-input");
@@ -260,10 +238,10 @@ function initPlayPage() {
 
     var data;
     if (roomCode) {
-      // Multiplayer move
+
       data = await apiCall("/api/room/move/" + roomCode, "POST", { move: moveStr });
     } else {
-      // Solo move
+
       data = await apiCall("/api/game/move", "POST", { move: moveStr });
     }
 
@@ -297,14 +275,13 @@ function initPlayPage() {
     input.focus();
   });
 
-  // ── Bot reply (delayed, so it doesn't feel instant) ──
   function scheduleBotMove() {
     const input = document.getElementById("move-input");
     const status = document.getElementById("game-status");
     input.disabled = true;
     if (status) status.textContent = "Bot is thinking…";
 
-    const delayMs = 500 + Math.floor(Math.random() * 700); // 0.5–1.2s
+    const delayMs = 500 + Math.floor(Math.random() * 700);
     setTimeout(async function() {
       const data = await apiCall("/api/game/bot-move", "POST");
       if (data.success) {
@@ -324,7 +301,6 @@ function initPlayPage() {
     }, delayMs);
   }
 
-  // ── Get hint (bot mode only) ──
   const getHintBtn = document.getElementById("btn-get-hint");
   if (getHintBtn) {
     getHintBtn.addEventListener("click", async function() {
@@ -341,7 +317,6 @@ function initPlayPage() {
     });
   }
 
-  // ── Help box toggle ──
   document.getElementById("help-toggle").addEventListener("click", function() {
     const content = document.getElementById("help-content");
     const chevron = this.querySelector(".nl-chevron");
@@ -356,7 +331,6 @@ function initPlayPage() {
     }
   });
 
-  // ── Resign ──
   document.getElementById("btn-resign").addEventListener("click", async function() {
     if (!confirm("Are you sure you want to resign?")) return;
 
@@ -373,7 +347,6 @@ function initPlayPage() {
     }
   });
 
-  // ── New Game (from controls) ──
   document.getElementById("btn-new-game").addEventListener("click", function() {
     if (!confirm("Start a new game? Current game will be lost.")) return;
     if (roomCode) stopRoomPoll();
@@ -384,7 +357,6 @@ function initPlayPage() {
     resetUI();
   });
 
-  // ── Save game ──
   document.getElementById("btn-save-game").addEventListener("click", async function() {
     var data;
     if (roomCode) {
@@ -400,7 +372,6 @@ function initPlayPage() {
     }
   });
 
-  // ── Play again ──
   document.getElementById("btn-play-again").addEventListener("click", function() {
     document.getElementById("game-over-overlay").style.display = "none";
     if (roomCode) stopRoomPoll();
@@ -411,9 +382,8 @@ function initPlayPage() {
     resetUI();
   });
 
-  // ── Check for existing game on page load ──
   if (roomCode) {
-    // Arrived via /play/<code> URL — auto-join the room
+
     initRoomGame();
   } else {
     checkExistingGame();
@@ -422,14 +392,13 @@ function initPlayPage() {
   async function initRoomGame() {
     const data = await apiCall("/api/room/state/" + roomCode, "GET");
     if (!data.success) {
-      // Not in this room — maybe we need to join first
-      // (handled by the play_room route redirect)
+
       return;
     }
     roomMyColor = data.my_color;
 
     if (data.status === "waiting") {
-      // We're the creator waiting for opponent
+
       setupDiv.style.display = "none";
       roomWaiting.style.display = "flex";
       document.getElementById("room-code-display").textContent = roomCode;
@@ -462,8 +431,6 @@ function initPlayPage() {
       updateMoveHistory(data.moves_list || []);
     }
   }
-
-  // ── UI update functions ──
 
   function updateBoard(data) {
     document.getElementById("board-container").innerHTML = data.svg;
@@ -535,19 +502,13 @@ function initPlayPage() {
   }
 }
 
-
-// ─────────────────────────────────────────────────────────────
-// ANALYSIS PAGE
-// ─────────────────────────────────────────────────────────────
-
 function initAnalysePage() {
   if (typeof window.ANALYSE_GAME_ID === "undefined") return;
 
   const gameId = window.ANALYSE_GAME_ID;
   let gameData = null;
-  let currentMoveIndex = -1; // -1 = starting position
+  let currentMoveIndex = -1;
 
-  // Load game data
   loadGame();
 
   async function loadGame() {
@@ -559,14 +520,12 @@ function initAnalysePage() {
     gameData = data;
     currentMoveIndex = -1;
 
-    // Render starting board
     document.getElementById("analyse-board").innerHTML = data.start_svg;
     updatePositionLabel();
     renderMoveList();
     fetchBestMove(data.start_fen);
   }
 
-  // ── Navigation buttons ──
   document.getElementById("btn-start").addEventListener("click", function() {
     goToMove(-1);
   });
@@ -589,7 +548,6 @@ function initAnalysePage() {
     }
   });
 
-  // ── Keyboard navigation ──
   document.addEventListener("keydown", function(e) {
     if (e.key === "ArrowLeft") {
       document.getElementById("btn-prev").click();
@@ -613,7 +571,6 @@ function initAnalysePage() {
       fen = gameData.moves[index].fen_after;
     }
 
-    // Get SVG for this FEN (oriented from the player's side)
     const data = await apiCall("/api/analyse/svg", "POST", {
       fen: fen,
       orientation: gameData.color,
@@ -699,7 +656,6 @@ function initAnalysePage() {
     html += "</tbody></table>";
     container.innerHTML = html;
 
-    // Make moves clickable
     container.querySelectorAll(".nl-analyse-move").forEach(function(td) {
       td.addEventListener("click", function() {
         const idx = parseInt(this.dataset.index, 10);
@@ -723,11 +679,6 @@ function initAnalysePage() {
     }
   }
 }
-
-
-// ─────────────────────────────────────────────────────────────
-// Initialize on DOM ready
-// ─────────────────────────────────────────────────────────────
 
 function initBoardVisibilityToggle() {
   const btn = document.getElementById("btn-toggle-board");

@@ -1,3 +1,4 @@
+/* Global stylesheet for NotationLearner — theme variables and all custom UI styling layered over Bootstrap. */
 :root {
   --nl-lightest : #9CBC79;
   --nl-mid-light: #75994E;

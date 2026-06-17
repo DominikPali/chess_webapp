@@ -1,3 +1,5 @@
+"""Single-player game JSON API — start games, validate moves, drive the Stockfish bot, hints, resign, and save."""
+
 import chess
 from flask import jsonify, request, session
 from flask_login import current_user, login_required
@@ -66,9 +68,11 @@ def _apply_bot_move(board):
 
 
 def register_game_api_routes(app):
+    """Register all single-player game JSON API endpoints on the Flask app."""
     @app.route("/api/game/new", methods=["POST"])
     @login_required
     def api_new_game():
+        """Initialise a fresh game in the session from the posted opponent/color/ELO and return the start state."""
         data = request.get_json() or {}
         opponent = data.get("opponent", "Stockfish")
         color = data.get("color", "white")
@@ -107,6 +111,7 @@ def register_game_api_routes(app):
     @app.route("/api/game/move", methods=["POST"])
     @login_required
     def api_make_move():
+        """Parse and validate the player's SAN move, push it to the session board, and return the updated state."""
         board = get_board_from_session()
         if board is None:
             return jsonify(
@@ -182,6 +187,7 @@ def register_game_api_routes(app):
     @app.route("/api/game/bot-move", methods=["POST"])
     @login_required
     def api_bot_move():
+        """Have the Stockfish opponent compute and play its reply, returning the new board state or an error."""
         board = get_board_from_session()
         if board is None:
             return jsonify({"success": False, "error": "No active game."}), 400
@@ -230,6 +236,7 @@ def register_game_api_routes(app):
     @app.route("/api/game/hint", methods=["GET"])
     @login_required
     def api_get_hint():
+        """Return Stockfish's best move and position evaluation for the current session position."""
         board = get_board_from_session()
         if board is None:
             return jsonify({"success": False, "error": "No active game."}), 400
@@ -259,6 +266,7 @@ def register_game_api_routes(app):
     @app.route("/api/game/state", methods=["GET"])
     @login_required
     def api_game_state():
+        """Return the current in-progress game's full state from the session, used to resume after a page reload."""
         board = get_board_from_session()
         if board is None:
             return jsonify({"success": False, "active": False}), 200
@@ -283,6 +291,7 @@ def register_game_api_routes(app):
     @app.route("/api/game/resign", methods=["POST"])
     @login_required
     def api_resign():
+        """Mark the current game inactive and return the result awarding the win to the opponent's color."""
         if get_board_from_session() is None:
             return jsonify({"success": False, "error": "No active game."}), 400
 
@@ -302,6 +311,7 @@ def register_game_api_routes(app):
     @app.route("/api/game/save", methods=["POST"])
     @login_required
     def api_save_game():
+        """Persist the finished session game (moves, PGN, result) to the database and clear the session state."""
         data = request.get_json() or {}
         result = data.get("result", "1/2-1/2")
         moves_list = session.get("game_moves", [])

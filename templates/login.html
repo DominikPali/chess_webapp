@@ -1,3 +1,4 @@
+{# Authentication page — renders either the login or registration form based on the `mode` variable. #}
 {% extends "base.html" %}
 
 {% block title %}{% if mode == 'register' %}Register{% else %}Log In{% endif %} – NotationLearner{% endblock %}

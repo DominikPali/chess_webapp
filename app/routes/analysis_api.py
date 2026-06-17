@@ -1,3 +1,5 @@
+"""Game analysis JSON API — serves saved-game move data, renders board SVGs, and returns Stockfish best moves."""
+
 import chess
 from flask import jsonify, request
 from flask_login import current_user, login_required
@@ -7,9 +9,11 @@ from app.services.chess_helpers import board_to_svg_data, get_stockfish_hint
 
 
 def register_analysis_api_routes(app):
+    """Register all game-analysis JSON API endpoints on the Flask app."""
     @app.route("/api/analyse/<int:game_id>", methods=["GET"])
     @login_required
     def api_analyse_game(game_id):
+        """Return a saved game's metadata plus its ordered moves and per-move FENs for replay (404 if not theirs)."""
         game = Game.query.filter_by(id=game_id, user_id=current_user.id).first_or_404()
         move_records = (
             Move.query.filter_by(game_id=game_id).order_by(Move.move_number).all()
@@ -46,6 +50,7 @@ def register_analysis_api_routes(app):
     @app.route("/api/analyse/svg", methods=["POST"])
     @login_required
     def api_analyse_svg():
+        """Render and return the board SVG for a posted FEN and orientation (used when stepping through moves)."""
         payload = request.get_json() or {}
         fen = payload.get("fen", chess.STARTING_FEN)
         orientation = (
@@ -63,6 +68,7 @@ def register_analysis_api_routes(app):
     @app.route("/api/analyse/bestmove", methods=["POST"])
     @login_required
     def api_analyse_bestmove():
+        """Return Stockfish's best move and evaluation for a posted FEN position during analysis."""
         fen = (request.get_json() or {}).get("fen", chess.STARTING_FEN)
         try:
             board = chess.Board(fen)

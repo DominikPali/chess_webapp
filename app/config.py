@@ -1,7 +1,10 @@
+"""Application configuration — sets secret key, database URI, and locates the Stockfish engine binary."""
+
 import os
 
 
 def _resolve_stockfish_path(configured_path):
+    """Return the first Stockfish binary that exists from the configured path plus common install locations."""
     default_path = configured_path or "/usr/local/bin/stockfish"
     candidate_paths = [
         default_path,
@@ -18,6 +21,7 @@ def _resolve_stockfish_path(configured_path):
 
 
 def configure_app(app):
+    """Populate app.config from environment variables, falling back to sensible local development defaults."""
     os.makedirs(app.instance_path, exist_ok=True)
 
     sqlite_path = os.path.join(app.instance_path, "notationlearner.db")

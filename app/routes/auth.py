@@ -1,3 +1,5 @@
+"""Authentication and account routes — login, registration, logout, profile viewing/editing, and deletion."""
+
 from flask import flash, redirect, render_template, request, session, url_for
 from flask_login import current_user, login_required, login_user, logout_user
 from werkzeug.security import check_password_hash, generate_password_hash
@@ -9,12 +11,15 @@ from app.services.chess_helpers import clear_session_game_state
 
 @login_manager.user_loader
 def load_user(user_id):
+    """Flask-Login callback that reloads the User object from the database given the id stored in the session."""
     return db.session.get(User, int(user_id))
 
 
 def register_auth_routes(app):
+    """Register all authentication and profile-management endpoints on the Flask app."""
     @app.route("/login", methods=["GET", "POST"])
     def login():
+        """Show the login form (GET) or verify credentials and start a session, redirecting to profile (POST)."""
         if current_user.is_authenticated:
             return redirect(url_for("profile"))
 
@@ -31,6 +36,7 @@ def register_auth_routes(app):
 
     @app.route("/register", methods=["GET", "POST"])
     def register():
+        """Show the signup form (GET) or validate input and create a new hashed-password account (POST)."""
         if current_user.is_authenticated:
             return redirect(url_for("profile"))
 
@@ -62,6 +68,7 @@ def register_auth_routes(app):
     @app.route("/logout")
     @login_required
     def logout():
+        """Clear any in-progress game state, end the user's login session, and return to the home page."""
         clear_session_game_state()
         logout_user()
         return redirect(url_for("index"))
@@ -69,6 +76,7 @@ def register_auth_routes(app):
     @app.route("/profile")
     @login_required
     def profile():
+        """Render the current user's profile with their saved games listed newest-first."""
         games = (
             Game.query.filter_by(user_id=current_user.id)
             .order_by(Game.date_played.desc())
@@ -79,6 +87,7 @@ def register_auth_routes(app):
     @app.route("/profile/edit", methods=["GET", "POST"])
     @login_required
     def edit_profile():
+        """Show the edit form (GET) or update username/email after checking they aren't taken by others (POST)."""
         if request.method == "POST":
             new_username = request.form.get("username", "").strip()
             new_email = request.form.get("email", "").strip()
@@ -102,6 +111,7 @@ def register_auth_routes(app):
     @app.route("/profile/delete", methods=["POST"])
     @login_required
     def delete_account():
+        """Permanently delete the current user (cascading to their games), clear the session, and log out."""
         db.session.delete(current_user)
         db.session.commit()
         session.clear()

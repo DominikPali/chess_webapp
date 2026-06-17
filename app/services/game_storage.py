@@ -1,3 +1,5 @@
+"""Game persistence service — turns a finished move list into saved Game/Move records and updates the user's stats."""
+
 from datetime import datetime
 
 import chess
@@ -19,6 +21,7 @@ def _result_for_user(color, result):
 
 
 def create_saved_game(user_id, opponent, color, result, moves_list, white_name, black_name):
+    """Build a Game (with PGN), replay the moves into Move rows, bump the user's win/draw/loss count, and commit."""
     board = chess.Board()
     pgn_game = chess.pgn.Game()
     pgn_game.headers["White"] = white_name

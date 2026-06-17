@@ -1,3 +1,5 @@
+"""Chess utility helpers — session board state, Stockfish hints/moves, SVG rendering, and room expiry handling."""
+
 import math
 import os
 import random
@@ -27,6 +29,7 @@ SESSION_GAME_KEYS = (
 
 
 def generate_game_code():
+    """Generate a random 6-character room code, retrying until one is found that isn't already in use."""
     chars = string.ascii_uppercase + string.digits
     while True:
         code = "".join(random.choices(chars, k=6))
@@ -35,20 +38,24 @@ def generate_game_code():
 
 
 def get_board_from_session():
+    """Rebuild a chess.Board from the FEN stored in the session, or None if no game is in progress."""
     fen = session.get("game_fen")
     return chess.Board(fen) if fen else None
 
 
 def save_board_to_session(board):
+    """Store the board's current FEN back into the session so the position survives between requests."""
     session["game_fen"] = board.fen()
 
 
 def clear_session_game_state():
+    """Remove every single-player game key from the session, ending the current game cleanly."""
     for key in SESSION_GAME_KEYS:
         session.pop(key, None)
 
 
 def get_stockfish_hint(board, time_limit=0.5):
+    """Run Stockfish for a fixed time on the position and return its best move plus a normalised evaluation, or None."""
     stockfish_path = current_app.config.get("STOCKFISH_PATH", "")
     if not stockfish_path or not os.path.exists(stockfish_path):
         return None
@@ -85,6 +92,7 @@ def get_stockfish_hint(board, time_limit=0.5):
 
 
 def get_stockfish_move(board, elo):
+    """Pick the bot's move at the requested ELO — using UCI strength limiting above 1320 and skill/depth caps below."""
     stockfish_path = current_app.config.get("STOCKFISH_PATH", "")
     if not stockfish_path or not os.path.exists(stockfish_path):
         return None
@@ -119,6 +127,7 @@ def get_stockfish_move(board, elo):
 
 
 def board_to_svg_data(board, last_move=None, orientation=chess.WHITE):
+    """Render the board to an SVG string, optionally highlighting the last move and the king when in check."""
     kwargs = {"size": 400, "orientation": orientation}
     if last_move:
         kwargs["lastmove"] = last_move
@@ -128,6 +137,7 @@ def board_to_svg_data(board, last_move=None, orientation=chess.WHITE):
 
 
 def session_orientation():
+    """Return the board orientation matching the colour the player chose for the current session game."""
     return chess.BLACK if session.get("game_color") == "black" else chess.WHITE
 
 
@@ -153,7 +163,7 @@ def is_room_expired(room):
 
 
 def cleanup_expired_rooms():
-    """Lazy sweep — delete every waiting/active room past its TTL.
+    """Lazy sweep — delete every waiting/active room past its TTL and return how many were removed.
     Finished rooms are left to the save flow."""
     rooms = ActiveGame.query.filter(
         ActiveGame.status.in_(("waiting", "active"))

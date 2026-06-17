@@ -1,3 +1,6 @@
+// Front-end logic for NotationLearner — drives the play page, room multiplayer, analysis board, and board toggle.
+
+// Thin wrapper around fetch that sends/receives JSON and returns the parsed response body.
 async function apiCall(url, method, body) {
   const options = {
     method: method || "GET",
@@ -10,6 +13,7 @@ async function apiCall(url, method, body) {
   return await response.json();
 }
 
+// Wires up the entire play page: game setup, bot/friend modes, move submission, polling, and end-game handling.
 function initPlayPage() {
   const setupDiv = document.getElementById("game-setup");
   const gameArea = document.getElementById("game-area");
@@ -34,6 +38,7 @@ function initPlayPage() {
   const hintToggleSection = document.getElementById("hint-toggle-section");
   const hintTogglePregame = document.getElementById("hint-toggle-pregame");
 
+  // Show or hide the bot-only controls (ELO slider, hint toggle) depending on whether the opponent is Stockfish.
   function updateBotOnlyVisibility() {
     const show = selectedOpponent === "Stockfish";
     if (botEloSection) botEloSection.style.display = show ? "block" : "none";
@@ -145,6 +150,7 @@ function initPlayPage() {
     roomMyColor = null;
   });
 
+  // Stop polling and show the game-over overlay when the server reports the room expired through inactivity.
   function handleRoomExpired() {
     stopRoomPoll();
     roomWaiting.style.display = "none";
@@ -152,6 +158,7 @@ function initPlayPage() {
     showGameOver("Game expired due to inactivity.", null);
   }
 
+  // Poll the room every 2s while waiting for an opponent, switching to the live game once the room is active.
   function startWaitingPoll() {
     roomPollInterval = setInterval(async function() {
       const data = await apiCall("/api/room/state/" + roomCode, "GET");
@@ -176,6 +183,7 @@ function initPlayPage() {
     }, 2000);
   }
 
+  // Cancel any active room polling interval and clear its handle.
   function stopRoomPoll() {
     if (roomPollInterval) {
       clearInterval(roomPollInterval);
@@ -183,6 +191,7 @@ function initPlayPage() {
     }
   }
 
+  // Poll the active room every 1.5s, refreshing the board on opponent moves and detecting game-over/resignation.
   function startRoomGamePoll() {
     roomPollInterval = setInterval(async function() {
       const data = await apiCall("/api/room/state/" + roomCode, "GET");
@@ -217,6 +226,7 @@ function initPlayPage() {
     }, 1500);
   }
 
+  // Update the status text in a room game to show whose turn it is and whether we're waiting on the opponent.
   function updateTurnIndicator(data) {
     if (roomCode && data.is_my_turn !== undefined) {
       var statusText = data.turn + " to move";
@@ -275,6 +285,7 @@ function initPlayPage() {
     input.focus();
   });
 
+  // After the player moves, disable input and request the bot's reply after a short randomised "thinking" delay.
   function scheduleBotMove() {
     const input = document.getElementById("move-input");
     const status = document.getElementById("game-status");
@@ -389,6 +400,7 @@ function initPlayPage() {
     checkExistingGame();
   }
 
+  // Bootstrap a room loaded directly via /play/<code>, choosing the waiting/active/finished view from its status.
   async function initRoomGame() {
     const data = await apiCall("/api/room/state/" + roomCode, "GET");
     if (!data.success) {
@@ -422,6 +434,7 @@ function initPlayPage() {
     }
   }
 
+  // On load, resume a single-player game already in progress in the session so a page refresh doesn't lose it.
   async function checkExistingGame() {
     const data = await apiCall("/api/game/state", "GET");
     if (data.success && data.active) {
@@ -432,6 +445,7 @@ function initPlayPage() {
     }
   }
 
+  // Swap in the latest board SVG and update the status text and move-number label from a response payload.
   function updateBoard(data) {
     document.getElementById("board-container").innerHTML = data.svg;
     document.getElementById("game-status").textContent =
@@ -440,6 +454,7 @@ function initPlayPage() {
     document.getElementById("game-move-count").textContent = "Move " + moveNum;
   }
 
+  // Render the move list into a paired White/Black history table and scroll it to the most recent move.
   function updateMoveHistory(movesList) {
     const container = document.getElementById("move-history");
     if (!movesList || movesList.length === 0) {
@@ -458,26 +473,31 @@ function initPlayPage() {
     container.scrollTop = container.scrollHeight;
   }
 
+  // Display an inline error message below the move input (e.g. illegal/invalid notation).
   function showError(msg) {
     const el = document.getElementById("move-error");
     el.textContent = msg;
     el.style.display = "block";
   }
 
+  // Hide the inline move-error message.
   function hideError() {
     document.getElementById("move-error").style.display = "none";
   }
 
+  // Display an informational message below the move input (e.g. check announcements, bot notices).
   function showMessage(msg) {
     const el = document.getElementById("move-message");
     el.textContent = msg;
     el.style.display = "block";
   }
 
+  // Hide the inline informational message.
   function hideMessage() {
     document.getElementById("move-message").style.display = "none";
   }
 
+  // Show the end-of-game overlay with the outcome message and lock the move input.
   function showGameOver(message, result) {
     document.getElementById("game-over-title").textContent = "Game Over";
     document.getElementById("game-over-message").textContent = message;
@@ -485,6 +505,7 @@ function initPlayPage() {
     document.getElementById("move-input").disabled = true;
   }
 
+  // Clear the board, history, inputs, hints, and overlays back to the pre-game state when starting over.
   function resetUI() {
     document.getElementById("move-history").innerHTML = '<p class="nl-empty-state">No moves yet.</p>';
     document.getElementById("board-container").innerHTML = "";
@@ -502,6 +523,7 @@ function initPlayPage() {
   }
 }
 
+// Wires up the analysis page: loads a saved game and lets the user step through positions with engine evaluation.
 function initAnalysePage() {
   if (typeof window.ANALYSE_GAME_ID === "undefined") return;
 
@@ -511,6 +533,7 @@ function initAnalysePage() {
 
   loadGame();
 
+  // Fetch the saved game's moves and metadata, then render the starting position, move list, and initial analysis.
   async function loadGame() {
     const data = await apiCall("/api/analyse/" + gameId, "GET");
     if (!data.success) {
@@ -560,6 +583,7 @@ function initAnalysePage() {
     }
   });
 
+  // Jump to a given move index: fetch that position's board SVG, update labels/highlight, and re-run analysis.
   async function goToMove(index) {
     if (!gameData) return;
 
@@ -583,6 +607,7 @@ function initAnalysePage() {
     fetchBestMove(fen);
   }
 
+  // Update the evaluation bar width and numeric label from a normalised score (-1..1) and optional mate count.
   function renderEval(scoreNorm, mateIn) {
     const fill = document.getElementById("analyse-eval-fill");
     const number = document.getElementById("analyse-eval-number");
@@ -602,6 +627,7 @@ function initAnalysePage() {
     number.textContent = label;
   }
 
+  // Ask the server for Stockfish's best move and evaluation of a FEN, then render them into the analysis panel.
   async function fetchBestMove(fen) {
     const container = document.getElementById("analyse-bestmove");
     if (!container) return;
@@ -624,6 +650,7 @@ function initAnalysePage() {
     }
   }
 
+  // Set the position label to "Start" or the move number/colour/notation of the currently viewed move.
   function updatePositionLabel() {
     const label = document.getElementById("analyse-position");
     if (currentMoveIndex === -1) {
@@ -636,6 +663,7 @@ function initAnalysePage() {
     }
   }
 
+  // Build the clickable move-history table for the analysed game, wiring each cell to jump to that position.
   function renderMoveList() {
     const container = document.getElementById("analyse-moves");
     if (!gameData || gameData.moves.length === 0) {
@@ -666,6 +694,7 @@ function initAnalysePage() {
     });
   }
 
+  // Highlight the move-list cell matching the current position and scroll it into view, clearing prior highlights.
   function highlightCurrentMove() {
     document.querySelectorAll(".nl-analyse-move").forEach(function(el) {
       el.classList.remove("nl-analyse-move--active");
@@ -680,6 +709,7 @@ function initAnalysePage() {
   }
 }
 
+// Wires up the show/hide board button, persisting the user's preference in localStorage across visits.
 function initBoardVisibilityToggle() {
   const btn = document.getElementById("btn-toggle-board");
   if (!btn) return;
@@ -689,6 +719,7 @@ function initBoardVisibilityToggle() {
   if (!board) return;
 
   const STORAGE_KEY = "nl-board-hidden";
+  // Apply the hidden/shown state to the board element and sync the button's icon, label, and aria-pressed.
   const apply = (hidden) => {
     board.classList.toggle("nl-board-container--hidden", hidden);
     btn.setAttribute("aria-pressed", String(hidden));
@@ -706,6 +737,7 @@ function initBoardVisibilityToggle() {
   });
 }
 
+// On page load, initialise whichever of the three features is present in the current page's DOM.
 document.addEventListener("DOMContentLoaded", function() {
   initPlayPage();
   initAnalysePage();

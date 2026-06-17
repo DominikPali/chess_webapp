@@ -1,3 +1,5 @@
+"""Application factory package — builds and wires up the Flask app (config, DB, login, routes)."""
+
 from pathlib import Path
 
 from flask import Flask
@@ -36,6 +38,7 @@ def _add_missing_columns():
 
 
 def create_app():
+    """Build a configured Flask app: set paths, init extensions, register routes, and create/patch DB tables."""
     project_root = Path(__file__).resolve().parent.parent
     instance_path = project_root / "instance"
     app = Flask(

@@ -17,6 +17,7 @@ from app.extensions import db
 
 
 def main():
+    """Build the app and create all database tables within its application context, then report the DB URI."""
     app = create_app()
     with app.app_context():
         db.create_all()

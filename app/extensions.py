@@ -1,3 +1,5 @@
+"""Shared Flask extension instances (SQLAlchemy DB and Flask-Login manager) created once and reused app-wide."""
+
 from flask_login import LoginManager
 from flask_sqlalchemy import SQLAlchemy
 

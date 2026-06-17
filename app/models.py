@@ -1,3 +1,5 @@
+"""SQLAlchemy ORM models — User accounts, saved Games, individual Moves, and live multiplayer ActiveGame rooms."""
+
 import json
 from datetime import datetime, timezone
 
@@ -7,6 +9,7 @@ from flask_login import UserMixin
 from .extensions import db
 
 
+# A registered account holder; stores credentials, win/draw/loss tallies, and owns their saved games.
 class User(UserMixin, db.Model):
     __tablename__ = "user"
 
@@ -26,6 +29,7 @@ class User(UserMixin, db.Model):
     )
 
 
+# A finished, persisted game belonging to a user — holds metadata, the full PGN, and its ordered moves.
 class Game(db.Model):
     __tablename__ = "game"
 
@@ -52,6 +56,7 @@ class Game(db.Model):
     )
 
 
+# A single half-move within a saved Game, recording its notation and the resulting board position (FEN).
 class Move(db.Model):
     __tablename__ = "move"
 
@@ -63,6 +68,7 @@ class Move(db.Model):
     fen_after = db.Column(db.String(100), nullable=False)
 
 
+# A live play-with-a-friend room keyed by a shareable code; tracks both players and the in-progress position.
 class ActiveGame(db.Model):
     __tablename__ = "active_game"
 
@@ -82,13 +88,17 @@ class ActiveGame(db.Model):
     black_user = db.relationship("User", foreign_keys=[black_user_id])
 
     def get_moves(self):
+        """Decode the stored JSON string into a Python list of SAN move strings."""
         return json.loads(self.moves_json or "[]")
 
     def set_moves(self, moves_list):
+        """Serialize a list of SAN move strings to JSON for storage in the moves_json column."""
         self.moves_json = json.dumps(moves_list)
 
     def get_fens(self):
+        """Decode the stored JSON string into a Python list of per-move FEN positions."""
         return json.loads(self.fens_json or "[]")
 
     def set_fens(self, fens_list):
+        """Serialize a list of FEN strings to JSON for storage in the fens_json column."""
         self.fens_json = json.dumps(fens_list)

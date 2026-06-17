@@ -1,3 +1,5 @@
+"""Play-with-a-friend JSON API — create/join rooms, poll room state, submit moves, resign, and save the result."""
+
 from datetime import datetime, timezone
 
 import chess
@@ -16,6 +18,7 @@ from app.services.game_storage import create_saved_game
 
 
 def _expired_response():
+    """Build the standard JSON + HTTP 410 response returned when a room has expired due to inactivity."""
     return (
         jsonify(
             {
@@ -29,13 +32,16 @@ def _expired_response():
 
 
 def _orientation_for(my_color):
+    """Translate a player's color string into the python-chess orientation constant for board rendering."""
     return chess.BLACK if my_color == "black" else chess.WHITE
 
 
 def register_room_api_routes(app):
+    """Register all multiplayer room JSON API endpoints on the Flask app."""
     @app.route("/api/room/create", methods=["POST"])
     @login_required
     def api_create_room():
+        """Create a new waiting room with a unique code, seat the creator on their chosen color, and return it."""
         color = (request.get_json() or {}).get("color", "white")
         room = ActiveGame(code=generate_game_code(), status="waiting")
 
@@ -63,6 +69,7 @@ def register_room_api_routes(app):
     @app.route("/api/room/join", methods=["POST"])
     @login_required
     def api_join_room():
+        """Seat the current user into an open room by code, fill the empty color, and activate the game."""
         cleanup_expired_rooms()
         code = (request.get_json() or {}).get("code", "").strip().upper()
         if not code:
@@ -103,6 +110,7 @@ def register_room_api_routes(app):
     @app.route("/api/room/state/<code>", methods=["GET"])
     @login_required
     def api_room_state(code):
+        """Return the polling snapshot for a room (board, turn, opponent, result) from the caller's perspective."""
         room = ActiveGame.query.filter_by(code=code.upper()).first()
         if not room:
             return jsonify({"success": False, "error": "Room not found."}), 404
@@ -146,6 +154,7 @@ def register_room_api_routes(app):
     @app.route("/api/room/move/<code>", methods=["POST"])
     @login_required
     def api_room_move(code):
+        """Validate that it's the caller's turn, apply their move to the shared room board, and persist the result."""
         room = ActiveGame.query.filter_by(code=code.upper()).first()
         if not room:
             return jsonify({"success": False, "error": "Room not found."}), 404
@@ -232,6 +241,7 @@ def register_room_api_routes(app):
     @app.route("/api/room/resign/<code>", methods=["POST"])
     @login_required
     def api_room_resign(code):
+        """Finish the room awarding the win to the opponent of whichever player called resign."""
         room = ActiveGame.query.filter_by(code=code.upper()).first()
         if not room:
             return jsonify({"success": False, "error": "Room not found."}), 404
@@ -260,6 +270,7 @@ def register_room_api_routes(app):
     @app.route("/api/room/save/<code>", methods=["POST"])
     @login_required
     def api_room_save(code):
+        """Persist the finished multiplayer game to the calling user's account as a saved Game record."""
         room = ActiveGame.query.filter_by(code=code.upper()).first()
         if not room:
             return jsonify({"success": False, "error": "Room not found."}), 404

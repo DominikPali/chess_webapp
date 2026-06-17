@@ -1,3 +1,4 @@
+# Files and directories Git should ignore (OS junk, virtualenvs, caches, local databases).
 .DS_Store
 .env
 .venv/

@@ -14,3 +14,6 @@ __pycache__/
 instance/*.db
 instance/*.sqlite
 instance/*.sqlite3
+
+.foreman/worktrees/
+.foreman/reports/

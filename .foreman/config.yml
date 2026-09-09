@@ -1,0 +1,33 @@
+# Project checks, allowed commands, context files, budgets, prod flag.
+# See docs/ARCHITECTURE.md's "Target-repo layout" and "Safety" sections.
+
+prod: false
+
+stack_default: python
+
+# Commands the Verifier allows inside the sandbox container, beyond a ticket's own
+# `verify` list. Exact commands only — no wildcards/globs.
+allowed_commands:
+  - pytest
+  - ruff
+  - mypy
+  - git
+
+# Whether a ticket may add a new dependency (anything not already present before the
+# ticket started). false = the Verifier flags any new dependency as a gate failure.
+allow_new_dependencies: false
+
+# Files every context pack includes in addition to a ticket's own `reads` list.
+context_files:
+  - CONVENTIONS.md
+
+# Autonomy policy per (tier, risk) -- SCHEMA ONLY as of phase 6 (docs/decisions/phase-5.md
+# Task 0). "manual" is the only value that ships any real behavior; every ticket still goes
+# through a human review regardless of what's written here. Do not set anything to
+# auto_accept/auto_merge -- load_project_config() rejects it loudly, since no code path acts
+# on it yet and a silently-ignored setting would be worse than no setting at all.
+# Auto-accept/auto-merge ship in a future phase, once the measurement fortnight is reviewed.
+autonomy:
+  T0: {L: manual, M: manual, H: manual}
+  T1: {L: manual, M: manual, H: manual}
+  T2: {L: manual, M: manual, H: manual}

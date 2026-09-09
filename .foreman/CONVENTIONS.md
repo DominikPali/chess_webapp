@@ -7,10 +7,9 @@ Read this before starting any ticket.
   read them, don't change them.
 - Existing tests that aren't part of your ticket must keep passing.
 - Run your ticket's exact `verify` commands yourself before considering it done.
-- Run `ruff format <path>` on every file you touch, before your final commit — this is
-  checked separately from `ruff check` (a formatter clean gate, not a lint gate) and is
-  never listed in a ticket's own `verify` commands, so it's easy to finish everything the
-  ticket asked for and still fail this one silently.
+- Don't worry about formatting — the Runner runs `ruff format` on your changed files
+  automatically after every iteration, before the formatter-clean gate checks them. Focus
+  on correctness, not style.
 - One logical change per commit; don't reformat files you're not otherwise touching.
 
 ## About this project
